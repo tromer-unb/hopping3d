@@ -1,6 +1,6 @@
 {
   "calculation": "first_passage",
-  "structure": {"cif": "structure.cif", "repeat": [1, 1, 1], "vacancy_fraction": 0.1, "vacancy_seed": 7},
+  "structure": {"file": "structure.cif", "repeat": [1, 1, 1], "vacancy_fraction": 0.1, "vacancy_seed": 7},
   "graph": {"cutoff_A": 3.75, "interlayer_scale": 0.05, "layer_normal": [0, 0, 1], "interlayer_threshold_A": 1.0, "intralayer_cutoff_A": 1.75, "interlayer_cutoff_A": 3.75},
   "transport": {"direction": "X", "temperature_K": 300.0, "xi0_A": 3.0, "nu0_Hz": 10000000000000.0, "gap_eV": 0.0, "gap_activation": "none", "voltages_V": [0.02, 0.05, 0.1], "n_trajectories": 200, "max_time_s": 5e-10, "max_steps": 5000, "electrode_width_A": 2.0},
   "chemistry": {},
