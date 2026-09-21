@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the accompanying article and this repository."
+title: "hopping3d: trajectory-resolved hopping transport in atomic networks"
+type: software
+authors:
+  - family-names: Pereira
+    given-names: J. P. Dadario
+  - family-names: Tromer
+    given-names: Raphael
+  - family-names: Ribeiro Junior
+    given-names: Luiz A.
+  - family-names: Galvao
+    given-names: Douglas S.
+version: 1.0.0
+date-released: 2026-09-21
+repository-code: "https://github.com/tromer-unb/hopping3d"
+license: MIT
