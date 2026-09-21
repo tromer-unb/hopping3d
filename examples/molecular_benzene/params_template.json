@@ -1,0 +1,26 @@
+{
+  "calculation": "diffusion_tensor",
+  "structure": {
+    "file": "benzene_sites.xyz",
+    "repeat": [1, 1, 1]
+  },
+  "graph": {
+    "cutoff_A": 8.0
+  },
+  "transport": {
+    "temperature_K": 300,
+    "xi0_A": 3.0,
+    "nu0_Hz": 1e13,
+    "initial_distribution": "equilibrium"
+  },
+  "chemistry": {},
+  "diffusion": {
+    "n_walkers": 1000,
+    "observation_time_s": 1e-9
+  },
+  "random_seed": 1234,
+  "output": {
+    "directory": "results"
+  },
+  "_note": "Template only: benzene_sites.xyz should already contain one coarse-grained site per molecule. Orientation-dependent pair couplings are not yet automated in v1.0."
+}
