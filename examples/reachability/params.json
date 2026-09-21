@@ -1,0 +1,24 @@
+{
+  "calculation": "reachability",
+  "structure": {
+    "file": "../first_passage/structure.cif",
+    "repeat": [1, 1, 1],
+    "vacancy_fraction": 0.10,
+    "vacancy_seed": 7
+  },
+  "graph": {
+    "cutoff_A": 3.75,
+    "interlayer_scale": 0.05,
+    "layer_normal": [0, 0, 1],
+    "interlayer_threshold_A": 1.0,
+    "intralayer_cutoff_A": 1.75,
+    "interlayer_cutoff_A": 3.75
+  },
+  "transport": {
+    "direction": "X",
+    "electrode_width_fraction": 0.08
+  },
+  "output": {
+    "directory": "results"
+  }
+}
