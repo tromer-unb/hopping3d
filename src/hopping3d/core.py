@@ -28,9 +28,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 from ase import Atoms
 from ase.io import read, write
 from ase.neighborlist import neighbor_list
@@ -108,6 +108,7 @@ def direction_vector(spec: Any, atoms: Optional[Atoms] = None) -> np.ndarray:
 
 
 def load_structure(cif: str | Path, repeat: Sequence[int] = (1, 1, 1)) -> Atoms:
+    """Read any ASE-supported structure format (CIF, XYZ, PDB, POSCAR, ...)."""
     atoms = read(str(cif))
     rep = tuple(int(x) for x in repeat)
     if rep != (1, 1, 1):
@@ -238,84 +239,75 @@ def bias_energy(atoms: Atoms, voltage_V: float, direction: np.ndarray) -> Tuple[
     u = pos @ direction
     umin, umax = float(u.min()), float(u.max())
     L = max(umax - umin, 1e-12)
-    e = -float(voltage_V) * (u - umin) / L
-    return e, u, L
+    E = -float(voltage_V) * (u - umin) / L
+    return E, u, L
 
 
-def localization_length_A(gap_eV: float, T_K: float, xi0_A: float,
-                          alpha_gap: float, beta_T: float,
-                          B_T: float = 0.0, B0_T: float = 10.0) -> float:
-    xi = float(xi0_A) / (1.0 + float(alpha_gap) * max(float(gap_eV), 0.0))
-    xi *= 1.0 + float(beta_T) * (float(T_K) / 300.0 - 1.0)
-    if float(B0_T) > 0.0:
-        xi /= math.sqrt(1.0 + (float(B_T) / float(B0_T))**2)
-    return max(xi, 1e-12)
+def effective_localization_length(cfg: Dict[str, Any]) -> float:
+    xi0 = float(cfg.get("xi0_A", 3.0))
+    Eg = float(cfg.get("gap_eV", 0.0))
+    alpha = float(cfg.get("gap_localization_alpha", 0.0))
+    T = float(cfg.get("temperature_K", 300.0))
+    beta = float(cfg.get("temperature_delocalization_beta", 0.0))
+    xi = xi0 / max(1.0 + alpha * Eg, 1e-12)
+    xi *= 1.0 + beta * (T / 300.0 - 1.0)
+    B = float(cfg.get("magnetic_field_T", 0.0))
+    B0 = float(cfg.get("magnetic_B0_T", 1.0))
+    if B != 0.0:
+        xi /= math.sqrt(1.0 + (B / max(B0, 1e-12)) ** 2)
+    return max(float(xi), 1e-8)
 
 
-def edge_coupling_weight(i: int, edge: Edge, sym_i: str, sym_j: str, cfg: Dict[str, Any]) -> float:
-    w = 1.0
-    pair_scales = cfg.get("pair_scales", {}) or {}
-    w *= float(pair_scales.get(pair_key(sym_i, sym_j), 1.0))
-    jmap = cfg.get("edge_transfer_integrals_eV", {}) or {}
-    if jmap:
-        key = f"{min(int(i), int(edge.j))}-{max(int(i), int(edge.j))}"
-        if key in jmap:
-            J = abs(float(jmap[key]))
-            Jref = max(abs(float(cfg.get("J_ref_eV", 1.0))), 1e-15)
-            w *= (J / Jref) ** 2
-    emap = cfg.get("edge_scales_by_index", {}) or {}
-    if emap:
-        key = f"{min(int(i), int(edge.j))}-{max(int(i), int(edge.j))}"
-        if key in emap:
-            w *= max(float(emap[key]), 0.0)
-    if "interlayer_scale" in cfg or "intralayer_cutoff_A" in cfg or "interlayer_cutoff_A" in cfg:
-        scale = max(float(cfg.get("interlayer_scale", 1.0)), 0.0)
-        normal = unit_vector(cfg.get("layer_normal", [0.0, 0.0, 1.0]))
+def edge_scale(i: int, edge: Edge, symbols: Sequence[str], cfg: Dict[str, Any]) -> float:
+    s = 1.0
+    normal = cfg.get("layer_normal", None)
+    if normal is not None:
+        n = unit_vector(normal)
+        dz = abs(float(np.dot(edge.dr, n)))
         threshold = float(cfg.get("interlayer_threshold_A", 1.0))
-        dz = abs(float(np.dot(edge.dr, normal)))
-        is_inter = dz > threshold
-        if is_inter:
-            if edge.r > float(cfg.get("interlayer_cutoff_A", 1.0e9)):
+        if dz > threshold:
+            if edge.r > float(cfg.get("interlayer_cutoff_A", cfg.get("cutoff_A", 3.8))):
                 return 0.0
-            w *= scale
-        else:
-            if edge.r > float(cfg.get("intralayer_cutoff_A", 1.0e9)):
-                return 0.0
-    tensor = cfg.get("orientation_tensor", None)
-    if tensor is not None:
-        M = np.asarray(tensor, dtype=float).reshape(3, 3)
-        u = edge.dr / max(edge.r, 1e-12)
-        orient = float(u @ M @ u)
-        w *= max(orient, 0.0)
-    return max(float(w), 0.0)
+            s *= float(cfg.get("interlayer_scale", 1.0))
+        elif edge.r > float(cfg.get("intralayer_cutoff_A", cfg.get("cutoff_A", 3.8))):
+            return 0.0
+    pair_scales = cfg.get("pair_scales", {}) or {}
+    if pair_scales:
+        key = pair_key(symbols[i], symbols[edge.j])
+        if key in pair_scales:
+            s *= float(pair_scales[key])
+    return max(s, 0.0)
 
 
-def transition_rates(i: int, neighbors_i: List[Edge], energies_eV: np.ndarray,
+def legacy_gap_activation(cfg: Dict[str, Any], voltage_V: float) -> float:
+    mode = str(cfg.get("gap_activation", "none")).lower()
+    if mode in ("none", "off", "false", "0"):
+        return 1.0
+    if mode not in ("legacy_global", "global"):
+        raise ValueError(f"Unknown gap_activation mode: {mode}")
+    Eg = float(cfg.get("gap_eV", 0.0))
+    if Eg <= 0.0:
+        return 1.0
+    gamma = float(cfg.get("gap_voltage_gamma_eV_per_V", 1.0))
+    T = float(cfg.get("temperature_K", 300.0))
+    barrier = max(0.0, Eg - gamma * abs(float(voltage_V)))
+    return math.exp(-barrier / max(KB_EV * T, 1e-15))
+
+
+def transition_rates(i: int, edges: List[Edge], energies_eV: np.ndarray,
                      symbols: Sequence[str], cfg: Dict[str, Any], voltage_V: float) -> Tuple[np.ndarray, np.ndarray]:
     T = float(cfg.get("temperature_K", 300.0))
-    gap = float(cfg.get("gap_eV", 0.0))
-    xi = localization_length_A(gap, T, float(cfg.get("xi0_A", 3.0)),
-        float(cfg.get("alpha_gap", 0.0)), float(cfg.get("beta_T", 0.0)),
-        float(cfg.get("B_T", 0.0)), float(cfg.get("B0_T", 10.0)))
-    nu0 = float(cfg.get("nu0_Hz", 1.0))
-    gap_mode = str(cfg.get("gap_activation", "none")).lower()
-    f_gap = 1.0
-    if gap_mode == "legacy_global" and T > 0.0:
-        gamma = float(cfg.get("gap_gamma", 1.0))
-        barrier = max(0.0, gap - gamma * abs(float(voltage_V)))
-        f_gap = math.exp(-barrier / (KB_EV * T))
-    elif gap_mode not in ("none", "off", "false"):
-        raise ValueError(f"Unknown gap_activation mode: {gap_mode}")
-    js: List[int] = []
-    rs: List[float] = []
-    for edge in neighbors_i:
+    xi = effective_localization_length(cfg)
+    nu0 = float(cfg.get("nu0_Hz", 1e13))
+    pref = legacy_gap_activation(cfg, voltage_V)
+    js, rs = [], []
+    for edge in edges:
+        escale = edge_scale(i, edge, symbols, cfg)
+        if escale <= 0.0:
+            continue
         dE = float(energies_eV[edge.j] - energies_eV[i])
-        if T > 0.0:
-            thermal = math.exp(-dE / (KB_EV * T)) if dE > 0.0 else 1.0
-        else:
-            thermal = 1.0 if dE <= 0.0 else 0.0
-        coupling = edge_coupling_weight(i, edge, symbols[i], symbols[edge.j], cfg)
-        rate = nu0 * coupling * math.exp(-2.0 * edge.r / xi) * thermal * f_gap
+        thermal = math.exp(-max(dE, 0.0) / max(KB_EV * T, 1e-15))
+        rate = nu0 * pref * escale * math.exp(-2.0 * edge.r / xi) * thermal
         if rate > 0.0 and np.isfinite(rate):
             js.append(edge.j)
             rs.append(rate)
@@ -357,8 +349,11 @@ def simulate_first_passage(atoms: Atoms, neighbors: List[List[Edge]], voltage_V:
     energies = ebias + offsets + imp
     symbols = atoms.get_chemical_symbols()
     rate_table = prepare_rate_table(neighbors, energies, symbols, transport_cfg, voltage_V)
-    source, umin, umax, width = electrode_indices(u, transport_cfg.get("electrode_width_A", None),
-        transport_cfg.get("electrode_width_fraction", 0.05))
+    source, umin, umax, width = electrode_indices(
+        u,
+        transport_cfg.get("electrode_width_A", None),
+        transport_cfg.get("electrode_width_fraction", 0.05),
+    )
     drain_threshold = umax - width
     ntraj = int(transport_cfg.get("n_trajectories", 500))
     max_steps = int(transport_cfg.get("max_steps", 5000))
@@ -371,8 +366,12 @@ def simulate_first_passage(atoms: Atoms, neighbors: List[List[Edge]], voltage_V:
     success_tortuosity: List[float] = []
     saved_paths: List[Dict[str, Any]] = []
     pos = np.asarray(atoms.positions)
-    for itraj in range(ntraj):
-        i = int(rng.choice(source)); start = i; t = 0.0; hops = 0; path_length = 0.0
+    for _itraj in range(ntraj):
+        i = int(rng.choice(source))
+        start = i
+        t = 0.0
+        hops = 0
+        path_length = 0.0
         path = [i] if len(saved_paths) < int(record_paths) else None
         times = [0.0] if path is not None else None
         ok = bool(u[i] >= drain_threshold)
@@ -387,14 +386,21 @@ def simulate_first_passage(atoms: Atoms, neighbors: List[List[Edge]], voltage_V:
             xsel = rng.random() * total
             ksel = int(np.searchsorted(np.cumsum(rates), xsel, side="right"))
             ksel = min(ksel, len(js) - 1)
-            j = int(js[ksel]); path_length += float(lengths[ksel]); t += dt; i = j; hops += 1
+            j = int(js[ksel])
+            path_length += float(lengths[ksel])
+            t += dt
+            i = j
+            hops += 1
             if path is not None:
-                path.append(i); times.append(t)
+                path.append(i)
+                times.append(t)
             if u[i] >= drain_threshold:
                 ok = True
         if ok:
             passed += 1
-            success_times.append(t); success_hops.append(hops); success_lengths.append(path_length)
+            success_times.append(t)
+            success_hops.append(hops)
+            success_lengths.append(path_length)
             straight = float(np.linalg.norm(pos[i] - pos[start]))
             success_tortuosity.append(path_length / max(straight, 1e-12))
             if path is not None:
@@ -405,18 +411,34 @@ def simulate_first_passage(atoms: Atoms, neighbors: List[List[Edge]], voltage_V:
     mh = float(np.mean(success_hops)) if success_hops else math.nan
     mpl = float(np.mean(success_lengths)) if success_lengths else math.nan
     mtor = float(np.mean(success_tortuosity)) if success_tortuosity else math.nan
-    drift_v = math.nan; mobility = math.nan
+    drift_v = math.nan
+    mobility = math.nan
     if success_times and voltage_V != 0.0 and L_A > 0.0:
-        L_m = L_A * ANGSTROM; drift_v = L_m / mt; field = abs(float(voltage_V)) / L_m
+        L_m = L_A * ANGSTROM
+        drift_v = L_m / mt
+        field = abs(float(voltage_V)) / L_m
         mobility = drift_v / field if field > 0.0 else math.nan
-    G = G0 * T_eff; I = G * float(voltage_V)
-    return {"V": float(voltage_V), "T_eff": T_eff, "T_stderr": stderr,
-        "n_pass": int(passed), "n_total": int(ntraj), "mean_first_passage_s": mt,
-        "mean_hops": mh, "mean_path_length_A": mpl, "mean_tortuosity": mtor,
-        "drift_velocity_m_s": drift_v, "mobility_drift_m2_Vs": mobility,
-        "G_landauer_compat_S": G, "I_landauer_compat_A": I,
-        "device_length_A": L_A, "electrode_width_A": width,
-        "direction_vector": direction.tolist(), "paths": saved_paths}
+    G = G0 * T_eff
+    I = G * float(voltage_V)
+    return {
+        "V": float(voltage_V),
+        "T_eff": T_eff,
+        "T_stderr": stderr,
+        "n_pass": int(passed),
+        "n_total": int(ntraj),
+        "mean_first_passage_s": mt,
+        "mean_hops": mh,
+        "mean_path_length_A": mpl,
+        "mean_tortuosity": mtor,
+        "drift_velocity_m_s": drift_v,
+        "mobility_drift_m2_Vs": mobility,
+        "G_landauer_compat_S": G,
+        "I_landauer_compat_A": I,
+        "device_length_A": L_A,
+        "electrode_width_A": width,
+        "direction_vector": direction.tolist(),
+        "paths": saved_paths,
+    }
 
 
 def run_voltage_sweep(atoms: Atoms, neighbors: List[List[Edge]], voltages: Iterable[float],
@@ -424,47 +446,78 @@ def run_voltage_sweep(atoms: Atoms, neighbors: List[List[Edge]], voltages: Itera
                       seed: int = 0) -> pd.DataFrame:
     rows = []
     for k, V in enumerate(voltages):
-        out = simulate_first_passage(atoms, neighbors, float(V), transport_cfg,
-                                     chemistry_cfg=chemistry_cfg,
-                                     rng_seed=int(seed) + 1009 * k, record_paths=0)
-        out.pop("paths", None); rows.append(out)
+        out = simulate_first_passage(
+            atoms,
+            neighbors,
+            float(V),
+            transport_cfg,
+            chemistry_cfg=chemistry_cfg,
+            rng_seed=int(seed) + 1009 * k,
+            record_paths=0,
+        )
+        out.pop("paths", None)
+        rows.append(out)
     return pd.DataFrame(rows)
 
 
 def plot_sweep(df: pd.DataFrame, out_png: str | Path, title: str = "") -> None:
     fig, axes = plt.subplots(2, 2, figsize=(10, 7.5))
-    ax = axes[0, 0]; ax.errorbar(df["V"], df["T_eff"], yerr=1.96 * df["T_stderr"], marker="o", capsize=3)
-    ax.set(xlabel="Bias V (V)", ylabel="Effective transmittance", ylim=(-0.03, 1.03)); ax.grid(alpha=0.25)
-    ax = axes[0, 1]; ax.plot(df["V"], df["mean_first_passage_s"], "o-")
-    ax.set(xlabel="Bias V (V)", ylabel="Mean first-passage time (s)"); ax.set_yscale("log"); ax.grid(alpha=0.25)
-    ax = axes[1, 0]; ax.plot(df["V"], df["mean_tortuosity"], "o-")
-    ax.set(xlabel="Bias V (V)", ylabel="Mean tortuosity"); ax.grid(alpha=0.25)
-    ax = axes[1, 1]; ax.plot(df["V"], df["mobility_drift_m2_Vs"], "o-")
-    ax.set(xlabel="Bias V (V)", ylabel="Drift mobility proxy (m$^2$/V s)"); ax.grid(alpha=0.25)
-    if title: fig.suptitle(title)
-    fig.tight_layout(); fig.savefig(out_png, dpi=180); plt.close(fig)
+    ax = axes[0, 0]
+    ax.errorbar(df["V"], df["T_eff"], yerr=1.96 * df["T_stderr"], marker="o", capsize=3)
+    ax.set(xlabel="Bias V (V)", ylabel="Effective transmittance", ylim=(-0.03, 1.03))
+    ax.grid(alpha=0.25)
+    ax = axes[0, 1]
+    ax.plot(df["V"], df["mean_first_passage_s"], "o-")
+    ax.set(xlabel="Bias V (V)", ylabel="Mean first-passage time (s)")
+    ax.set_yscale("log")
+    ax.grid(alpha=0.25)
+    ax = axes[1, 0]
+    ax.plot(df["V"], df["mean_tortuosity"], "o-")
+    ax.set(xlabel="Bias V (V)", ylabel="Mean tortuosity")
+    ax.grid(alpha=0.25)
+    ax = axes[1, 1]
+    ax.plot(df["V"], df["mobility_drift_m2_Vs"], "o-")
+    ax.set(xlabel="Bias V (V)", ylabel="Drift mobility proxy (m$^2$/V s)")
+    ax.grid(alpha=0.25)
+    if title:
+        fig.suptitle(title)
+    fig.tight_layout()
+    fig.savefig(out_png, dpi=180)
+    plt.close(fig)
 
 
 def plot_structure_3d(atoms: Atoms, out_png: str | Path, title: str = "Structure") -> None:
     from ase.data import atomic_numbers, covalent_radii
-    pos = np.asarray(atoms.positions); syms = np.asarray(atoms.get_chemical_symbols())
-    fig = plt.figure(figsize=(7, 6)); ax = fig.add_subplot(111, projection="3d")
+
+    pos = np.asarray(atoms.positions)
+    syms = np.asarray(atoms.get_chemical_symbols())
+    fig = plt.figure(figsize=(7, 6))
+    ax = fig.add_subplot(111, projection="3d")
     for sp in sorted(set(syms.tolist())):
-        idx = np.where(syms == sp)[0]; z = atomic_numbers[sp]
+        idx = np.where(syms == sp)[0]
+        z = atomic_numbers[sp]
         size = max(float(covalent_radii[z]) * 35.0, 18.0)
         ax.scatter(pos[idx, 0], pos[idx, 1], pos[idx, 2], s=size, label=sp, alpha=0.82)
-    ax.set(xlabel="x (Å)", ylabel="y (Å)", zlabel="z (Å)", title=title); ax.legend(loc="best", fontsize=8)
-    fig.tight_layout(); fig.savefig(out_png, dpi=180); plt.close(fig)
+    ax.set(xlabel="x (Å)", ylabel="y (Å)", zlabel="z (Å)", title=title)
+    ax.legend(loc="best", fontsize=8)
+    fig.tight_layout()
+    fig.savefig(out_png, dpi=180)
+    plt.close(fig)
 
 
 def plot_paths_3d(atoms: Atoms, paths: List[Dict[str, Any]], out_png: str | Path,
                   title: str = "Successful KMC trajectories") -> None:
-    pos = np.asarray(atoms.positions); fig = plt.figure(figsize=(7, 6)); ax = fig.add_subplot(111, projection="3d")
+    pos = np.asarray(atoms.positions)
+    fig = plt.figure(figsize=(7, 6))
+    ax = fig.add_subplot(111, projection="3d")
     ax.scatter(pos[:, 0], pos[:, 1], pos[:, 2], s=5, alpha=0.15)
     for p in paths:
-        idx = np.asarray(p["indices"], dtype=int); ax.plot(pos[idx, 0], pos[idx, 1], pos[idx, 2], alpha=0.35, lw=0.8)
+        idx = np.asarray(p["indices"], dtype=int)
+        ax.plot(pos[idx, 0], pos[idx, 1], pos[idx, 2], alpha=0.35, lw=0.8)
     ax.set(xlabel="x (Å)", ylabel="y (Å)", zlabel="z (Å)", title=title)
-    fig.tight_layout(); fig.savefig(out_png, dpi=180); plt.close(fig)
+    fig.tight_layout()
+    fig.savefig(out_png, dpi=180)
+    plt.close(fig)
 
 
 def simulate_periodic_diffusion(atoms: Atoms, cutoff_A: float, transport_cfg: Dict[str, Any],
@@ -475,67 +528,127 @@ def simulate_periodic_diffusion(atoms: Atoms, cutoff_A: float, transport_cfg: Di
     neigh = build_periodic_graph(atoms, cutoff_A)
     offsets = chemistry_site_offsets(atoms, chemistry_cfg)
     offsets += legacy_impurity_potential(atoms, chemistry_cfg.get("legacy_impurity", {}) or {})
-    symbols = atoms.get_chemical_symbols(); cfg = dict(transport_cfg); cfg["gap_activation"] = "none"
+    symbols = atoms.get_chemical_symbols()
+    cfg = dict(transport_cfg)
+    cfg["gap_activation"] = "none"
     ptable = []
     for i, edges in enumerate(neigh):
-        kept_edges = []; kept_rates = []
+        kept_edges = []
+        kept_rates = []
         for edge in edges:
             _js, _rates = transition_rates(i, [edge], offsets, symbols, cfg, voltage_V=0.0)
-            if len(_rates): kept_edges.append(edge); kept_rates.append(float(_rates[0]))
+            if len(_rates):
+                kept_edges.append(edge)
+                kept_rates.append(float(_rates[0]))
         ptable.append((kept_edges, np.asarray(kept_rates, dtype=float)))
-    T = float(cfg.get("temperature_K", 300.0)); rng = np.random.default_rng(int(seed))
-    disps = np.zeros((int(n_walkers), 3), dtype=float); hop_counts = np.zeros(int(n_walkers), dtype=int)
+    T = float(cfg.get("temperature_K", 300.0))
+    rng = np.random.default_rng(int(seed))
+    disps = np.zeros((int(n_walkers), 3), dtype=float)
+    hop_counts = np.zeros(int(n_walkers), dtype=int)
     init_mode = str(cfg.get("initial_distribution", "equilibrium")).lower()
     if init_mode in ("equilibrium", "boltzmann") and T > 0.0:
-        e0 = offsets - float(np.min(offsets)); weights = np.exp(-np.clip(e0 / (KB_EV * T), 0.0, 700.0)); start_prob = weights / weights.sum()
+        e0 = offsets - float(np.min(offsets))
+        weights = np.exp(-np.clip(e0 / (KB_EV * T), 0.0, 700.0))
+        start_prob = weights / weights.sum()
     elif init_mode in ("uniform", "legacy"):
         start_prob = None
     else:
         raise ValueError(f"Unknown initial_distribution: {init_mode}")
     for w in range(int(n_walkers)):
         i = int(rng.integers(0, len(atoms))) if start_prob is None else int(rng.choice(len(atoms), p=start_prob))
-        t = 0.0; d = np.zeros(3, dtype=float)
+        t = 0.0
+        d = np.zeros(3, dtype=float)
         while t < observation_time_s:
             edges, rates = ptable[i]
-            if len(rates) == 0: break
-            total = float(rates.sum()); dt = -math.log(max(rng.random(), 1e-15)) / total
-            if t + dt > observation_time_s: break
-            x = rng.random() * total; k = int(np.searchsorted(np.cumsum(rates), x, side="right")); k = min(k, len(edges) - 1)
-            edge = edges[k]; d += edge.dr; i = int(edge.j); t += dt; hop_counts[w] += 1
+            if len(rates) == 0:
+                break
+            total = float(rates.sum())
+            dt = -math.log(max(rng.random(), 1e-15)) / total
+            if t + dt > observation_time_s:
+                break
+            x = rng.random() * total
+            k = int(np.searchsorted(np.cumsum(rates), x, side="right"))
+            k = min(k, len(edges) - 1)
+            edge = edges[k]
+            d += edge.dr
+            i = int(edge.j)
+            t += dt
+            hop_counts[w] += 1
         disps[w] = d
     outer_mean = np.mean(np.einsum("ni,nj->nij", disps, disps), axis=0)
-    D_A2_s = outer_mean / (2.0 * float(observation_time_s)); D = D_A2_s * ANGSTROM**2; mu = E_CHARGE * D / (KB_J * T)
-    return {"D_m2_s": D.tolist(), "mu_m2_Vs": mu.tolist(), "mean_hops": float(np.mean(hop_counts)),
-        "median_hops": float(np.median(hop_counts)), "zero_hop_fraction": float(np.mean(hop_counts == 0)),
-        "initial_distribution": init_mode, "n_walkers": int(n_walkers), "observation_time_s": float(observation_time_s),
-        "mean_squared_displacement_A2": float(np.mean(np.sum(disps**2, axis=1)))}
+    D_A2_s = outer_mean / (2.0 * float(observation_time_s))
+    D = D_A2_s * ANGSTROM**2
+    mu = E_CHARGE * D / (KB_J * T)
+    return {
+        "D_m2_s": D.tolist(),
+        "mu_m2_Vs": mu.tolist(),
+        "mean_hops": float(np.mean(hop_counts)),
+        "median_hops": float(np.median(hop_counts)),
+        "zero_hop_fraction": float(np.mean(hop_counts == 0)),
+        "initial_distribution": init_mode,
+        "n_walkers": int(n_walkers),
+        "observation_time_s": float(observation_time_s),
+        "mean_squared_displacement_A2": float(np.mean(np.sum(disps**2, axis=1))),
+    }
 
 
 def save_tensor_csv(path: str | Path, tensor: Sequence[Sequence[float]], prefix: str) -> None:
-    arr = np.asarray(tensor, dtype=float); labels = [f"{prefix}_x", f"{prefix}_y", f"{prefix}_z"]
+    arr = np.asarray(tensor, dtype=float)
+    labels = [f"{prefix}_x", f"{prefix}_y", f"{prefix}_z"]
     pd.DataFrame(arr, index=labels, columns=labels).to_csv(path)
 
 
 def prepare_from_config(config_path: str | Path) -> Tuple[Dict[str, Any], Path, Atoms, List[List[Edge]]]:
-    config_path = Path(config_path).resolve(); cfg = load_json(config_path); base = config_path.parent
-    scfg = cfg.get("structure", {}); cif = Path(scfg["cif"])
-    if not cif.is_absolute(): cif = base / cif
-    atoms = load_structure(cif, scfg.get("repeat", [1, 1, 1]))
-    atoms = apply_random_vacancies(atoms, scfg.get("vacancy_fraction", 0.0), scfg.get("vacancy_seed", 0), scfg.get("vacancy_symbols", None))
-    cutoff = float(cfg.get("graph", {}).get("cutoff_A", 3.0)); graph = build_finite_graph(atoms, cutoff)
+    config_path = Path(config_path).resolve()
+    cfg = load_json(config_path)
+    base = config_path.parent
+    scfg = cfg.get("structure", {})
+    raw_structure = scfg.get("file", scfg.get("cif"))
+    if raw_structure is None:
+        raise KeyError("structure.file is required (legacy structure.cif is also accepted)")
+    structure = Path(raw_structure)
+    if not structure.is_absolute():
+        structure = base / structure
+    atoms = load_structure(structure, scfg.get("repeat", [1, 1, 1]))
+    atoms = apply_random_vacancies(
+        atoms,
+        scfg.get("vacancy_fraction", 0.0),
+        scfg.get("vacancy_seed", 0),
+        scfg.get("vacancy_symbols", None),
+    )
+    cutoff = float(cfg.get("graph", {}).get("cutoff_A", 3.0))
+    graph = build_finite_graph(atoms, cutoff)
     return cfg, base, atoms, graph
 
 
 def run_from_config(config_path: str | Path) -> pd.DataFrame:
     cfg, base, atoms, graph = prepare_from_config(config_path)
-    outdir = base / cfg.get("output", {}).get("directory", "results"); outdir.mkdir(parents=True, exist_ok=True)
-    write(outdir / "structure_used.cif", atoms); plot_structure_3d(atoms, outdir / "structure.png", cfg.get("output", {}).get("title", "Structure"))
-    tcfg = dict(cfg.get("transport", {})); tcfg.update(cfg.get("graph", {})); chem = cfg.get("chemistry", {})
-    volts = tcfg.get("voltages_V", [0.0, 0.5, 1.0]); seed = int(cfg.get("random_seed", 1234))
-    df = run_voltage_sweep(atoms, graph, volts, tcfg, chem, seed); df.to_csv(outdir / "sweep.csv", index=False)
+    outdir = base / cfg.get("output", {}).get("directory", "results")
+    outdir.mkdir(parents=True, exist_ok=True)
+    write(outdir / "structure_used.cif", atoms)
+    plot_structure_3d(atoms, outdir / "structure.png", cfg.get("output", {}).get("title", "Structure"))
+    tcfg = dict(cfg.get("transport", {}))
+    tcfg.update(cfg.get("graph", {}))
+    chem = cfg.get("chemistry", {})
+    volts = tcfg.get("voltages_V", [0.0, 0.5, 1.0])
+    seed = int(cfg.get("random_seed", 1234))
+    df = run_voltage_sweep(atoms, graph, volts, tcfg, chem, seed)
+    df.to_csv(outdir / "sweep.csv", index=False)
     plot_sweep(df, outdir / "sweep_summary.png", cfg.get("output", {}).get("title", ""))
-    path_V = float(cfg.get("output", {}).get("path_voltage_V", max(volts))); npaths = int(cfg.get("output", {}).get("record_paths", 40))
-    pout = simulate_first_passage(atoms, graph, path_V, tcfg, chem, rng_seed=seed + 99991, record_paths=npaths)
+    path_V = float(cfg.get("output", {}).get("path_voltage_V", max(volts)))
+    npaths = int(cfg.get("output", {}).get("record_paths", 40))
+    pout = simulate_first_passage(
+        atoms,
+        graph,
+        path_V,
+        tcfg,
+        chem,
+        rng_seed=seed + 99991,
+        record_paths=npaths,
+    )
     plot_paths_3d(atoms, pout["paths"], outdir / "paths_3d.png", f"Successful trajectories at V={path_V:g} V")
-    meta = {k: v for k, v in pout.items() if k != "paths"}; meta["n_atoms"] = len(atoms); meta["mean_degree"] = float(np.mean([len(n) for n in graph]))
-    save_json(outdir / "path_metrics.json", meta); return df
+    meta = {k: v for k, v in pout.items() if k != "paths"}
+    meta["n_atoms"] = len(atoms)
+    meta["mean_degree"] = float(np.mean([len(n) for n in graph]))
+    save_json(outdir / "path_metrics.json", meta)
+    return df
