@@ -2,7 +2,7 @@ name: Reproduction smoke test
 on:
   workflow_dispatch:
   pull_request:
-    paths: ['reproduction/**','src/**']
+    paths: ['reproduction/**','src/**','examples/article_systems/**']
 jobs:
   reproduce:
     runs-on: ubuntu-latest
@@ -13,8 +13,6 @@ jobs:
           python-version: '3.12'
           cache: pip
       - run: pip install -e .
-      - run: python reproduction/scripts/plot_publication_figures.py
-      - uses: actions/upload-artifact@v4
-        with:
-          name: reproduced-figures
-          path: reproduction/generated/*.png
+      - run: hopping3d-eht doctor
+      - run: python reproduction/article_cases/run_interface.py
+      - run: python -m pytest -q tests/test_eht_public.py
