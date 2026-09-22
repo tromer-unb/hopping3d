@@ -1,16 +1,15 @@
 # Examples
 
-These examples are for users applying `hopping3d` to their own systems. The `reproduction/` directory is separate and exists only to reproduce the published article.
+The repository examples correspond directly to the systems discussed in the transport framework.
 
-| Example | Status | What it demonstrates |
-|---|---|---|
-| `first_passage/` | executable | finite source-to-drain KMC |
-| `diffusion_tensor/` | executable | periodic bulk diffusion tensor |
-| `reachability/` | executable | pure graph connectivity, no KMC time scale |
-| `graphene_li/` | template | host + impurity modeling choices |
-| `molecular_benzene/` | physical-model template | molecule-as-site coarse graining and orientation dependence |
-| `finite_nanocone/` | template | finite curved nanostructure with an arbitrary transport axis |
+- `first_passage/`: finite source-to-drain KMC.
+- `diffusion_tensor/`: periodic diffusion tensor.
+- `reachability/`: graph connectivity without a kinetic time scale.
+- `article_systems/carbon_stack/`: layered carbon and dimensional rescue.
+- `article_systems/bn/`: 3D BN tensor benchmark.
+- `article_systems/w2o6/`: chemically heterogeneous W-O network.
+- `article_systems/graphene_benzene/`: one or several benzene molecules on graphene.
 
-For the first three examples, install the package and run `hopping3d params.json` from the example directory.
+The 100-benzene periodic box is generated programmatically by `reproduction/article_cases/run_benzene_box.py`, so no large pre-generated molecular box is required in the repository.
 
-The last three are deliberately documented as templates because the physically correct site/rate model must be chosen by the user; they are not intended to imply that a single default parameterization is quantitatively valid for all impurities, molecular solids, or nanostructures.
+The most complete reproducibility entry point is `reproduction/article_cases/run_all.sh`.
