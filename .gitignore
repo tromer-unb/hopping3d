@@ -6,8 +6,8 @@ __pycache__/
 *.egg-info/
 build/
 dist/
-reproduction/generated/*
-!reproduction/generated/.gitkeep
+reproduction/article_cases/results/
+reproduction/inputs/stacked_graphene_4layers.cif
 examples/*/results/
 .DS_Store
 *.aux
