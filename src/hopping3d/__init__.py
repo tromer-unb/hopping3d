@@ -4,4 +4,4 @@ from .graph import active_adjacency, reachable_from_targets, source_drain_reacha
 from .survival import simulate_detailed, arrival_curve, adaptive_first_passage
 from .tensor import principal_decomposition, directional_value, dual_unit_vectors, symmetrize_tensor
 
-__version__ = "1.0.0"
+__version__ = "2.1.0"
