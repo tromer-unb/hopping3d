@@ -11,7 +11,7 @@ The JSON file selects one of three public calculation modes.
 ## Top-level calculation modes
 
 `calculation: "first_passage"`
-: finite source-to-drain KMC. Use for devices, ribbons, flakes, nanocones, finite clusters, and finite 3D networks.
+: finite source-to-drain KMC. Use for devices, ribbons, flakes, finite clusters, and finite 3D networks.
 
 `calculation: "diffusion_tensor"`
 : periodic bulk KMC. Returns the full diffusion tensor and principal diffusivities/axes.
@@ -68,7 +68,7 @@ The JSON file selects one of three public calculation modes.
 : attempt frequency; reduced time `nu0*tau` removes its global clock scale.
 
 `pair_scales`
-: phenomenological relative hopping weights for chemical pairs, e.g. `C-C`, `C-Li`, `O-W`.
+: phenomenological relative hopping weights for chemical pairs.
 
 `n_trajectories`
 : number of finite-device KMC trajectories.
@@ -90,6 +90,24 @@ The JSON file selects one of three public calculation modes.
 `site_offsets_array_eV`
 : full site-energy correction array supplied by the user.
 
-The model is phenomenological: `interlayer_scale`, site offsets, and pair scales are model parameters, not claimed DFT transfer integrals.
+### Explicit EHT / external couplings
 
-For molecular solids, see `docs/use_cases.md`: the current atom-as-site engine does not automatically infer molecules or orientation-dependent transfer integrals.
+`edge_transfer_integrals_eV`
+: mapping from an edge key such as `"12-27"` to an explicit transfer integral. When supplied, the rate weight is proportional to `|J_ij/J_ref|^2`.
+
+`J_ref_eV`
+: reference coupling used to make pair weights dimensionless for Miller--Abrahams calculations.
+
+`strict_edge_transfer_integrals`
+: if true, graph edges absent from the explicit coupling map receive zero electronic coupling rather than a default unit weight.
+
+`rate_model`
+: `"miller_abrahams"` or `"marcus"`.
+
+`reorganization_energy_eV`
+: Marcus reorganization energy. This is not predicted reliably by ordinary EHT and should be supplied externally.
+
+`edge_reorganization_energy_eV`
+: optional edge-specific Marcus reorganization energies.
+
+The EHT layer in `hopping3d_eht` can infer atomic and molecular couplings for the validated article use cases. See `docs/eht_to_transport.md` and `docs/use_cases.md`. Raw EHT level differences are screening quantities unless independently validated.
