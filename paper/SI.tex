@@ -1,0 +1,103 @@
+\documentclass[aps,prmaterials,onecolumn,amsmath,amssymb,superscriptaddress]{revtex4-2}
+\usepackage{graphicx,booktabs,siunitx,hyperref,microtype}
+\begin{document}
+\title{Supplemental Material for ``Mechanism-resolved hopping transport across atomic, molecular, and hybrid networks with low-cost semiempirical electronic parametrization''}
+\author{J. P. Dadario Pereira}\author{Raphael Tromer}\author{Luiz A. Ribeiro Junior}\author{Douglas S. Galv\~ao}
+\date{\today}\maketitle
+
+\section{Interpretation hierarchy}
+The main manuscript deliberately separates three levels of inference. Exact graph reachability is a property of the chosen network and contains no kinetic parameter. Directional trends and chemical-path selection are treated as mechanism-level or semiquantitative conclusions when they remain stable over broad parameter ranges. Absolute mobilities, quasiparticle level alignments, defect energetics, charge-transfer energies, and carrier densities are not inferred quantitatively from Extended H\"uckel theory (EHT).
+
+EHT is used because it provides a transparent and inexpensive orbital Hamiltonian with geometry-dependent couplings. It is not self-consistent and does not contain modern exchange-correlation physics, dielectric polarization, image-charge effects, or many-body quasiparticle corrections. A density-functional-theory/Wannier parametrization would therefore be preferred whenever quantitative material prediction is the target. The transport engine itself is agnostic to parameter origin and can accept higher-fidelity site energies and edge couplings without modification.
+
+\section{EHT extraction and coupling normalization}
+The nonorthogonal EHT Hamiltonian obeys
+\begin{equation}
+H_{\mu\nu}=K S_{\mu\nu}(H_{\mu\mu}+H_{\nu\nu})/2.
+\end{equation}
+We apply symmetric L\"owdin orthogonalization and extract effective onsite terms and intersite blocks. For one-orbital carbon and BN transport subspaces, the relevant projected matrix element is used directly. For O--W, the O $2p$--W $5d$ block is reduced to an effective coupling magnitude. Edge-rate weights are normalized as
+\begin{equation}
+w_{ij}=\left|J_{ij}/J_{\rm ref}\right|^2,
+\end{equation}
+so the electronic distance/orientation dependence is not multiplied by a second phenomenological transfer-integral decay.
+
+\begin{table}[h]
+\caption{Direct-EHT screening parameters used to anchor the mechanism maps.}
+\begin{ruledtabular}
+\begin{tabular}{lcc}
+System & Quantity & EHT value\\\hline
+4-layer C & median $J_\parallel$ & 1.2235 eV\\
+4-layer C & median $J_\perp$ & 0.01244 eV\\
+4-layer C & $(J_\perp/J_\parallel)^2$ & $1.03\times10^{-4}$\\
+BN & $J_\parallel^{\rm ref}$ & 1.5353 eV\\
+BN & median $J_\perp$ & 0.02602 eV\\
+BN & $(J_\perp/J_\parallel)^2$ & $2.87\times10^{-4}$\\
+W$_2$O$_6$ & $J_{WO}^{\rm ref}$ & 4.590 eV\\
+W$_2$O$_6$ & median $w_{OO}$ & $3.68\times10^{-3}$\\
+W$_2$O$_6$ & raw W $5d$--O $2p$ level contrast & 4.43 eV\\
+100-benzene box & $N_{mol}$ / unique NN edges & 100 / 300\\
+100-benzene box & external Marcus $\lambda$ & 0.20 eV\\
+Graphene+4 benzene & $|J_{G-M}|$ & 13.44 meV\\
+Graphene+4 benzene & $|J_{M-M}|$ range & 0.015--7.06 meV\\
+Graphene--Li & mean $|J_{C-Li}|$ & 0.189 eV\\
+Graphene--Li & raw Li--C$\pi$ level offset & +5.64 eV\\
+\end{tabular}
+\end{ruledtabular}
+\end{table}
+
+\section{Layered-carbon topology versus the EHT kinetic point}
+The exact topology curves are unchanged by the numerical value assigned to a nonzero transverse rate. At vacancy fraction $p_v=0.25$, the strict-2D mean source reachability is 0.275, while the graph with transverse links enabled gives 0.990. The EHT rate scale, $1.03\times10^{-4}$, lies below the production kinetic sweep. It should therefore be interpreted as evidence that topology can be rescued on a timescale much shorter than the timescale required for efficient traversal of the rescued path.
+
+\section{BN direct-EHT tensor ensemble}
+The direct-EHT BN calculation uses the same $2\times2\times2$ geometry as the mechanism sweep. Common site energies are retained because the purpose is to isolate the coupling-induced tensor hierarchy rather than model a particular charged defect in BN. The ensemble principal diffusivities are
+\begin{equation}
+D_1=1.987\times10^{-7},\quad D_2=3.365\times10^{-8},\quad D_3=1.494\times10^{-8}\ {\rm m^2s^{-1}},
+\end{equation}
+with $D_1/D_3=13.30$. Walkers accumulate approximately 1280 hops on average, avoiding a short-time eigenvalue-ordering artifact.
+
+\section{W$_2$O$_6$ graph audit and chemistry control}
+At the 3.4~\AA\ cutoff used throughout the article, the 48-atom W$_{12}$O$_{36}$ geometry contains 62 W--O edges and 106 O--O edges, but no W--W edge. The original reduced-model parameter denoted $w_{\rm homo}$ therefore acts only on O--O edges for this particular graph. We retain the previous notation only when discussing the historical mechanism sweep; the revised manuscript labels the active quantity $w_{OO}$.
+
+The O-only subgraph is source--drain connected. Consequently, suppression of W visitation does not block the finite device. With EHT edge couplings but zero site contrast, the reduced first-passage time is $4.061\pm0.131$ and the W visit fraction is $0.4847\pm0.0026$. Using the raw EHT W $5d$--O $2p$ orbital contrast as a screening point gives $234.30\pm4.36$ and $0.0534\pm0.0090$, respectively; the eventual passage fraction remains one.
+
+The raw 4.43-eV orbital separation must not be read as a DFT-quality defect or polaron site-energy difference. Its role is to establish that the EHT point lies deep in the saturated high-contrast sector already identified by the independent parameter sweep.
+
+\section{Molecular EHT reduction and the 100-molecule box}
+For benzene, a one-$p_z$-per-carbon EHT subspace is used with the previously calibrated Wolfsberg--Helmholtz factor employed in the exploratory molecular benchmark. That single calibration was made to a low-cost monomer frontier-gap reference and is not used in the carbon-stack, BN, or W$_2$O$_6$ benchmarks. Because the HOMO and LUMO manifolds are twofold degenerate, the pair coupling is defined from the projected intermolecular block $V$ through
+\begin{equation}
+J_{\rm eff}^2=\frac{1}{2}{\rm Tr}(VV^\dagger),
+\end{equation}
+which is invariant to rotations within the degenerate frontier subspace.
+
+The explicit molecular-box demonstration uses 100 benzene molecules on a $5\times5\times4$ periodic center lattice at 7.0~\AA\ spacing. The molecular graph has 300 unique nearest-neighbor edges. In the aligned box, direct EHT hole couplings span 0.0040--0.557~meV. With a controlled external Marcus reorganization energy $\lambda=0.20$~eV, the principal diffusivities are $8.47\times10^{-10}$, $4.62\times10^{-10}$, and $5.33\times10^{-14}$~m$^2$s$^{-1}$. This gives $D_1/D_3=1.59\times10^4$.
+
+For the orientationally isotropic ensemble, ten independent molecular-orientation fields are generated with all molecular centers fixed. The mean median pair coupling is $0.0562\pm0.0039$~meV across these structural realizations. Tensors are averaged before diagonalization, yielding $D_1=2.20\times10^{-11}$, $D_2=2.09\times10^{-11}$, and $D_3=1.84\times10^{-11}$~m$^2$s$^{-1}$, or $D_1/D_3=1.20$. The absolute diffusion scale depends strongly on the controlled $\lambda$ and on the synthetic packing. The robust point is the orientation-induced collapse of the tensor anisotropy.
+
+\section{Molecule--slab reduction}
+For a graphene--benzene structure, the substrate is represented by carbon $p_z$ states and each benzene by its frontier doublet. The interface Hamiltonian is projected to obtain $J_{G-M}$, while pairs of molecular components are projected separately to obtain $J_{M-M}$. The four-benzene demonstration gives four symmetry-equivalent electron couplings of approximately 13.44~meV. The six intermolecular couplings are 7.06, 3.45, 0.015, 0.015, 3.46, and 7.06~meV for the chosen geometry.
+
+The single-molecule tilt scan isolates the geometrical sensitivity of the interface. At fixed minimum C--C contact, the hole coupling decreases from 25.29 to 2.86~meV between $0^\circ$ and $75^\circ$ tilt; the electron coupling decreases from 15.81 to 3.03~meV. These are coupling estimates only. A complete charge-transfer rate additionally requires a molecular level offset and a reorganization energy. In a metallic or semimetallic substrate, a reservoir/Marcus--Gerischer description may be more appropriate than assigning incoherent hopping states to every pristine substrate atom.
+
+\section{System-specific EHT presets and parameters outside EHT}
+The EHT engine is common to all examples, but the physically relevant transport subspace is system dependent. Table~\ref{tab:presets} summarizes the choices used here. The intent is not to fit EHT until a desired transport result is obtained. Instead, the orbital basis is chosen from the expected localized transport manifold; if a conclusion is sensitive to uncertain onsite alignment or reorganization physics, those quantities are promoted to a higher-level calculation.
+
+\begin{table}[h]
+\caption{Transport subspaces and parameters that remain external to ordinary EHT.}\label{tab:presets}
+\begin{ruledtabular}
+\begin{tabular}{lll}
+System & EHT transport subspace & External/refinable quantity\\\hline
+layered C / graphene & C $2p_z$ & carrier/site-energy model\\
+BN & B,N $2p_z$ & defect/charge-state energies\\
+W$_2$O$_6$ & O $2p$, W $5d$ & screened carrier onsite energies\\
+benzene box & molecular HOMO/LUMO doublets & Marcus $\lambda$, real morphology\\
+graphene+benzene & C $2p_z$ + molecular doublet & level alignment, $\lambda$, polarization\\
+\end{tabular}
+\end{ruledtabular}
+\end{table}
+
+\section{Impurity-level limitation}
+The one-site graphene--Li EHT model provides a useful coupling scale but an unreliable absolute adsorption-level alignment because charge transfer and screening are not treated self-consistently. Its raw Li level lies approximately 5.64 eV above the carbon $\pi$ reference, which places the bare model in the bypass regime. The broader impurity sweep is therefore retained as a mechanism map showing how transport would respond if a more accurate electronic calculation placed an impurity state near or below the active transport window.
+
+\section{Reproducibility}
+All production data used by the manuscript are archived in the public Hopping3D repository under \texttt{paper/data/}. The figure-generation workflow writes both 600-dpi PNG and SVG files, while selected direct-EHT anchors and the 100-molecule benzene benchmark can be regenerated independently from the supplied structures and scripts. The repository also contains the manuscript sources, carrier-resolved parameter schema, worked examples, and the distinction between rebuilding figures from archived production data and rerunning the more expensive stochastic calculations.
+\end{document}

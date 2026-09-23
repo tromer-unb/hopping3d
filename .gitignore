@@ -14,3 +14,10 @@ examples/**/results/
 *.blg
 *.log
 *.out
+*.fdb_latexmk
+*.fls
+paper/*.pdf
+paper/figures/*.png
+paper/figures/*.svg
+paper/figures/legacy/*.png
+paper/figures/legacy/*.svg

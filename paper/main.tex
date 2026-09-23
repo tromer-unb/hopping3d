@@ -1,0 +1,184 @@
+\documentclass[aps,prmaterials,reprint,amsmath,amssymb,superscriptaddress,longbibliography]{revtex4-2}
+\usepackage{graphicx,bm,booktabs,siunitx,hyperref,microtype}
+\newcommand{\kb}{k_{\mathrm B}}
+\newcommand{\taufp}{\tau_{\mathrm{FP}}}
+\newcommand{\Teff}{T_{\mathrm{eff}}}
+\newcommand{\etaPerp}{\eta_{\perp}}
+\begin{document}
+\title{Mechanism-resolved hopping transport across atomic, molecular, and hybrid networks with low-cost semiempirical parametrization}
+\author{J. P. Dadario Pereira}\affiliation{Applied Physics Department, Gleb Wataghin Institute of Physics, State University of Campinas, Campinas, SP 13083-970, Brazil}
+\author{Raphael Tromer}\affiliation{Institute of Physics, University of Bras\'ilia, Bras\'ilia, Federal District 70910-900, Brazil}
+\author{Luiz A. Ribeiro Junior}\affiliation{Computational Materials Laboratory, LCCMat, Institute of Physics, University of Bras\'ilia, Bras\'ilia, Federal District 70910-900, Brazil}
+\author{Douglas S. Galv\~ao}\affiliation{Applied Physics Department, Gleb Wataghin Institute of Physics, State University of Campinas, Campinas, SP 13083-970, Brazil}
+\date{\today}
+\begin{abstract}
+Localized-state transport is often modeled either with highly simplified hopping parameters or with electronic-structure calculations whose cost limits statistical sampling. We develop an intermediate strategy in which graph-resolved CTMC/KMC transport is combined with Extended H\"uckel theory (EHT) as a low-cost electronic parametrization layer. The aim is not to replace density-functional theory (DFT), but to establish physically correct transport regimes---connectivity, anisotropy, chemical-path selection, molecular orientation, and molecule--substrate coupling---before higher-fidelity parameters are introduced. Controlled sweeps are retained as mechanism maps, while EHT supplies geometry- and chemistry-informed couplings. In a vacancy-fragmented layered carbon network, weak transverse edges restore topology before they accelerate transport; direct EHT places the transverse rate scale near $10^{-4}$. In BN, EHT-derived couplings yield a strongly anisotropic diffusion tensor with $D_1/D_3\simeq13.3$. In W$_2$O$_6$, EHT places the system in the O-rich slow-transport sector independently identified by the mechanism map. We then extend the same construction to molecular systems. A periodic box containing 100 benzene molecules is reduced to a molecular graph whose edge-specific transfer integrals are computed directly from dimer EHT; keeping the molecular centers fixed while randomizing orientation collapses the ensemble anisotropy from $1.59\times10^4$ to 1.20. Finally, graphene with multiple adsorbed benzene molecules demonstrates a hybrid atom--molecule interface in which EHT provides both molecule--substrate and molecule--molecule couplings directly from a structural input. Absolute mobilities, quasiparticle level alignments, reorganization energies, screening, and charged-interface energetics remain quantities for DFT, higher-level quantum chemistry, experiment, or external calibration.
+\end{abstract}
+\maketitle
+
+\section{Introduction}
+Transport through disordered materials is controlled by a hierarchy of questions. A carrier must first have a connected path through the network; the available path may then be kinetically slow, directionally anisotropic, chemically selective, or dominated by long residence on a trap. These mechanisms can produce similar changes in a terminal current while requiring entirely different microscopic interpretations. Localized-state hopping models are useful precisely because they expose this hierarchy, connecting disorder, localization, percolation, and phonon-assisted transfer to mesoscale dynamics \cite{anderson1958,miller1960,ambegaokar1971,mott1979,shklovskii1984,abrahams1979,kramer1993}. Their predictive value depends on how the local energies and transition couplings are chosen.
+
+At one extreme, fully phenomenological parameters allow broad mechanism maps but provide little guidance about where a particular material lies within those maps. At the other extreme, DFT, localized-orbital Hamiltonians, Wannier constructions, or higher-level quantum chemistry can provide materially meaningful site energies and transfer integrals, but repeated calculations over defects, disorder realizations, thermal snapshots, and large transport networks can become expensive. A useful intermediate level is therefore desirable when the scientific target is not a high-precision mobility, but the identification of robust mechanisms and parameter regimes.
+
+Here we adopt direct Extended H\"uckel theory (EHT) as that intermediate layer \cite{slater1954,wolfsberg1952,hoffmann1963}. EHT is a semiempirical one-electron method. It is inexpensive, transparent, and naturally provides geometry-dependent Hamiltonian matrix elements, but it lacks self-consistent charge redistribution, modern exchange-correlation physics, dielectric screening, image-charge effects, and systematic accuracy across all materials. We therefore use it as a \emph{screening parametrization}, not as a substitute for DFT. Its role is to answer questions such as whether an interlayer coupling is parametrically weak, whether two molecular orientations differ by an order of magnitude in transfer integral, or whether a heterogeneous network is pushed toward one chemical backbone. Quantitative material prediction would require replacing the semiempirical parameters by validated DFT- or experiment-derived quantities.
+
+This distinction motivates the structure of the present work. Controlled sweeps remain in the analysis because they reveal the mechanism itself; EHT values are then used as inexpensive electronic anchors. Figure~\ref{fig:framework} summarizes the hierarchy. We first examine dimensional rescue in a vacancy-fragmented layered carbon network, tensorial diffusion in BN, and chemical-path selection in W$_2$O$_6$. Graphene is a useful controlled host because its pristine electronic structure and high mobility are well established, while vacancies, disorder, localized states, weak localization, and electron--phonon scattering provide experimentally and theoretically documented routes away from ideal ballistic transport \cite{novoselov2004,geim2007,castroneto2009,peres2010,morozov2008,bolotin2008,hwang2008,pereira2006,chen2009,lherbier2008,lherbier2012,liang2012,tikhonenko2008,park2014,pereira2026}. We then make molecular coarse graining explicit rather than treating it as an abstract extension. A periodic box containing 100 benzene molecules demonstrates the workflow for a molecular bulk structure: molecules are the transport sites, neighboring molecular pairs are projected onto frontier subspaces, EHT supplies $J_{ij}$, and Marcus kinetics propagates those couplings into a diffusion tensor. A second molecular application treats graphene with several benzene molecules adsorbed on the surface. There atomic substrate states and molecular frontier states coexist, so the same structural input supplies molecule--substrate ($G$--$M$) and molecule--molecule ($M$--$M$) couplings. This interface example is particularly relevant to the intended use of the framework: a user may provide a CIF for a two-dimensional material or slab with adsorbates and obtain a low-cost first parametrization before deciding which electronic quantities require DFT refinement.
+
+\begin{figure*}[t]\centering
+\includegraphics[width=0.98\textwidth]{figures/Fig1_framework_eht.png}
+\caption{\textbf{Low-cost parametrization and transport hierarchy.} Coordinates define atomic, molecular, or hybrid transport sites. EHT supplies geometry-dependent electronic couplings, a chosen local rate law converts them to stochastic transition rates, and graph/CTMC/KMC analysis returns reachability, first-passage statistics, and diffusion tensors. The star symbols schematically denote material-informed parameter locations within broader mechanism maps.}
+\label{fig:framework}\end{figure*}
+
+\section{Methods}
+\subsection{Graph transport and observables}
+Atomic structures are represented as sparse graphs with sites at positions $\mathbf r_i$. Continuous-time kinetic Monte Carlo follows the rejection-free event-selection logic widely used for activated stochastic dynamics \cite{bortz1975,andersen2019}, while microscopic charge-transport KMC in disordered molecular systems provides a closely related multiscale precedent \cite{bassler1993,ruhle2011,vehoff2010,nenashev2015,shuai2014}. Finite-device calculations use source and drain slabs along a chosen direction; periodic calculations retain minimum-image connectivity and accumulate unwrapped displacements. Exact graph traversal is performed before finite-device kinetics so that topological disconnection is not confused with a finite observation-time failure.
+
+For Miller--Abrahams hopping \cite{miller1960},
+\begin{equation}
+\Gamma_{ij}=\nu_0 w_{ij}e^{-2r_{ij}/\xi}\min\!\left[1,e^{-(E_j-E_i)/(\kb T)}\right],
+\end{equation}
+where $w_{ij}$ is either a controlled dimensionless weight or a weight derived from an explicit transfer integral. When explicit $J_{ij}$ values are used, the electronic distance dependence is already contained in $J_{ij}$ and is not counted a second time in the pair weight. Continuous-time trajectories use an exponential waiting time with total escape rate $R_i=\sum_j\Gamma_{ij}$.
+
+Finite-device observables include exact source reachability, passage fraction $\Teff$, first-passage time $\taufp$, hop count, tortuosity, and chemical-site visitation. For periodic transport,
+\begin{equation}
+D_{\alpha\beta}=\frac{\langle\Delta r_\alpha\Delta r_\beta\rangle}{2t},
+\end{equation}
+which is diagonalized to give $D_1\ge D_2\ge D_3$ and the corresponding principal axes.
+
+\subsection{Direct Extended H\"uckel parametrization}
+EHT constructs a nonorthogonal Hamiltonian from orbital diagonal energies and overlaps. Off-diagonal terms follow the Wolfsberg--Helmholtz form \cite{wolfsberg1952,hoffmann1963},
+\begin{equation}
+H_{\mu\nu}=K S_{\mu\nu}\frac{H_{\mu\mu}+H_{\nu\nu}}{2}.
+\end{equation}
+The overlap matrix is orthogonalized with a symmetric L\"owdin transformation before extracting effective onsite levels and pair couplings. For carbon and BN, the transport subspace is built from locally oriented $p_z$-like states. For the tungsten-oxide benchmark, O $2p$ and W $5d$ channels are retained; the W $5d$ radial basis uses the standard double-$\zeta$ EHT representation. These three core article benchmarks use direct EHT parameters without fitting to the transport results. The molecular extension uses a previously calibrated $\pi$-EHT Wolfsberg--Helmholtz factor chosen to reproduce a low-cost monomer frontier-gap reference; it is therefore a calibrated semiempirical extension rather than a parameter-free EHT prediction. Pair-block couplings are reduced to effective magnitudes, and hopping weights scale as $|J_{ij}/J_{\rm ref}|^2$.
+
+This construction has deliberate limitations. EHT orbital energies are not quasiparticle addition/removal energies, and raw orbital-level differences should not automatically be interpreted as defect formation energies or fully screened hopping-site energies. EHT also omits self-consistent charge transfer, dielectric polarization, image charges, and many-body corrections. We therefore label raw level differences as \emph{screening scales}. Couplings are generally more robust for our purpose because the central question is often their relative magnitude and directional hierarchy. DFT/Wannier or experiment-derived parameters can replace the EHT values without modifying the transport engine.
+
+\subsection{Electron and hole channels}
+EHT itself is not run once for an electron and again for a hole. A single nonorthogonal Hamiltonian $(H,S)$ is constructed and diagonalized for a given geometry. Electron and hole parameters are then obtained by projecting that same electronic structure onto different frontier subspaces. In a molecular system, occupied frontier states (HOMO-like) define the hole-transfer block and unoccupied frontier states (LUMO-like) define the electron-transfer block, producing $J_h$ and $J_e$ from the same EHT calculation. In an atomic solid, the analogous distinction is made by selecting valence-like and conduction-like local orbital manifolds appropriate to the material.
+
+The transport problems are subsequently solved separately. A hole calculation uses the hole couplings, hole site-energy landscape, charge sign, and hole reorganization energy $\lambda_h$; an electron calculation uses the corresponding electron quantities and $\lambda_e$. The two calculations may be requested in one workflow and reported together, but they are independent single-carrier CTMC/KMC simulations. Simultaneous interacting electron--hole transport, recombination, or exciton dynamics would require a multispecies kinetic model and is outside the present implementation. This separation is consistent with established molecular charge-transfer treatments in which electron and hole transfer integrals and reorganization energies are distinct microscopic inputs \cite{coropceanu2007,shuai2014,shuai2020,giannini2022}.
+
+\subsection{Molecular boxes and molecule--slab interfaces}
+For molecular systems the natural transport site is a molecule rather than an atom. Molecular hopping models connect electronic coupling, reorganization energy, energetic disorder, and structural packing to mesoscopic charge motion \cite{marcus1956,coropceanu2007,ruhle2011,shuai2014,shuai2020,nenashev2015,difley2010}. Dynamic modulation of transfer integrals and transient localization further emphasize that orientation and thermal motion cannot generally be reduced to center-to-center distance alone \cite{troisi2006jpc,troisi2006prl,fratini2020,giannini2022}. Each molecular component is identified from covalent connectivity and represented by its center and frontier-orbital subspace. For benzene, the transport electronic basis is the conjugated carbon $p_z$ manifold. Because its HOMO and LUMO manifolds are twofold degenerate, a pair of molecules $A$ and $B$ is characterized by the basis-invariant coupling
+\begin{equation}
+J_{AB}^2=\frac{1}{m}{\rm Tr}(V_{AB}V_{AB}^{\dagger}),
+\end{equation}
+where $V_{AB}$ is the projected intermolecular Hamiltonian block and $m=2$. Thus a CIF containing $N$ molecules produces an $N$-site molecular graph with edge-specific $J_{ij}$ values. Molecular hopping is propagated with Marcus rates; the reorganization energy $\lambda$ is an external physical parameter because ordinary EHT does not determine nuclear reorganization energies reliably.
+
+A molecule--slab structure is decomposed into a substrate and molecular components. For weakly coupled organic/graphene interfaces, quantitative level alignment is known to depend strongly on polarization and image-charge effects, as demonstrated explicitly for benzene on graphene by constrained-DFT calculations \cite{roychoudhury2016}. For the graphene--benzene demonstration, carbon $p_z$ states describe the substrate and the benzene frontier doublet defines the molecular site. Projection of the interface Hamiltonian gives $J_{G-M}$, while separate molecular projections give $J_{M-M}$ when multiple adsorbates are present. This is a coupling parametrization rather than a complete interface electronic structure. Absolute molecule--substrate level alignment is particularly sensitive to charge transfer, dielectric screening, interface dipoles, and image-charge effects, so raw EHT orbital energies are reported only as screening information unless a higher-level alignment is supplied.
+
+\subsection{Mechanism sweeps versus material-informed points}
+The distinction between a mechanism sweep and a material-informed point is central. In the layered carbon and BN calculations, a dimensionless transverse scale $\etaPerp$ is varied over several decades to expose how topology or tensor anisotropy evolves. Direct EHT then supplies a value $\etaPerp^{\rm EHT}\sim(J_\perp/J_\parallel)^2$. In W$_2$O$_6$, the mechanism map varies a site-energy contrast $\Delta\epsilon$ and an O--O pair weight relative to W--O. EHT provides an independent O $2p$--W $5d$ orbital-level contrast and edge-resolved couplings. We do not tune EHT to reproduce the transport maps.
+
+\subsection{Production systems}
+The dimensional-rescue structure contains four carbon layers and 192 sites before vacancies. Intralayer edges use a 1.75~\AA\ cutoff and transverse edges extend to 3.75~\AA. Exact topology statistics use 600 vacancy realizations per vacancy fraction. Conditional kinetics at $p_v=0.25$ use 20 structural realizations and 800 trajectories per point.
+
+The BN tensor benchmark uses a $2\times2\times2$ replicated 64-atom crystal. The mechanism sweep uses the same graph and stochastic protocol as the previous model, while the direct-EHT point replaces the pair scales by explicit EHT couplings and uses a sufficiently long observation window to accumulate approximately $1.3\times10^3$ hops per walker.
+
+The W$_2$O$_6$ benchmark contains 48 atoms (W$_{12}$O$_{36}$) with a 3.4~\AA\ finite graph. An important structural detail is that this cutoff produces 62 W--O edges, 106 O--O edges, and no W--W edges. Thus the ``homonuclear'' parameter of the original reduced sweep is, for this geometry, effectively an O--O control. Direct EHT uses the same graph and therefore introduces no additional topological channel.
+
+The molecular-bulk demonstration contains 100 benzene molecules on a periodic $5\times5\times4$ center lattice with 7.0~\AA\ spacing. The aligned and orientationally isotropic ensembles have identical centers and topology. Each site has six molecular neighbors, giving 300 unique pair couplings. Direct calibrated $\pi$-EHT is evaluated for each molecular pair. Marcus transport uses $T=300$~K and a controlled external $\lambda=0.20$~eV; this value defines the clock but is not claimed to be an EHT prediction. The isotropic result averages ten independently generated orientational fields at the tensor level before diagonalization.
+
+The hybrid-interface example contains graphene with four benzene adsorbates. The structural parser identifies the substrate and four separate molecular components without user-specified atom indices. Direct EHT gives the four $G$--$M$ couplings and all six $M$--$M$ pair couplings. We emphasize the coupling network rather than an absolute charge-transfer rate because a quantitative latter result would additionally require a reliable molecular level offset and reorganization energy.
+
+
+\section{Results and Discussion}
+\subsection{Dimensional rescue survives a much weaker EHT interlayer scale}
+Figure~\ref{fig:rescue} first separates topology from kinetics. Vacancies fragment the strict-2D layers: at $p_v=0.25$ the mean reachable source fraction is 0.275, and none of 600 realizations has every source site connected to the drain. Merely enabling transverse graph edges raises the mean reachable fraction to 0.990 and the fully connected probability to 0.878. Because this is exact graph traversal, the effect is independent of any hopping prefactor.
+
+The kinetic sweep then shows how costly those rescued paths are. Conditioned on exact reachability, the median reduced first-passage time decreases from 1262 at $\etaPerp=0.01$ to 247 at unity, while the tortuosity collapses from 66.3 to roughly 27--29. Direct EHT on the exact 192-site stack gives a median intralayer coupling of 1.2235~eV and a median interlayer coupling of 12.44~meV, corresponding to
+\begin{equation}
+\etaPerp^{\rm EHT}\simeq1.03\times10^{-4}.
+\end{equation}
+This lies below the illustrative kinetic sweep. The implication is not that dimensional rescue disappears; topology changes for any active transverse edge. Instead, EHT suggests that a realistic rescued path in this simplified electronic model would pay a substantially larger kinetic cost. This is precisely why topology and kinetics should not be collapsed into one scalar transport measure.
+
+\begin{figure*}[t]\centering
+\includegraphics[width=0.98\textwidth]{figures/Fig2_dimensional_rescue_eht.png}
+\caption{\textbf{Dimensional rescue and its EHT scale.} (a,b) Exact source reachability and full-source connectivity versus vacancy fraction. (c,d) Conditional first-passage time and tortuosity versus transverse rate scale. The dashed vertical line is the direct-EHT estimate $\etaPerp^{\rm EHT}=1.03\times10^{-4}$ for the exact carbon stack. The EHT point lies below the kinetic sweep but does not alter the topological statement that any active transverse edge can reconnect fragmented layers.}
+\label{fig:rescue}\end{figure*}
+
+\subsection{BN: EHT anchors a strongly anisotropic tensor}
+The BN sweep shows the continuous recovery of the slow principal diffusion mode as transverse coupling is increased [Fig.~\ref{fig:bn}]. The earlier representative point $\etaPerp=0.05$ gave an anisotropy near seven and was useful for visualizing the crossover. Direct EHT places the same crystal much further into the weak-transverse-coupling regime. The median interlayer coupling is 26.0~meV compared with an intralayer reference of 1.535~eV, giving $\etaPerp^{\rm EHT}=2.87\times10^{-4}$.
+
+With those edge-resolved couplings used directly, the ensemble principal diffusivities are
+\begin{align}
+D_1&=1.99\times10^{-7},\qquad D_2=3.37\times10^{-8},\\
+D_3&=1.49\times10^{-8}~{\rm m^2s^{-1}}.
+\end{align}
+and $D_1/D_3=13.3$. The absolute scale still depends on the attempt-frequency convention and on the reduced localized-state description. The more defensible conclusion is that a low-cost electronic parametrization independently predicts a pronounced layered tensor and places the material on the strongly anisotropic side of the mechanism map.
+
+We intentionally do not use the raw EHT B--N orbital-level difference as a quantitative hopping-site disorder in this benchmark. Localized states, defect energetics, dielectric response, and anisotropic properties of h-BN are known to depend strongly on defect identity, charge state, and dimensionality \cite{greenaway2018,huang2012,sajid2018,laturia2018,jiang2018,prasad2023}. Pristine BN is a wide-gap insulator and realistic charge transport depends on defects, charge state, carrier density, and local relaxation. The BN calculation is therefore a tensorial geometry benchmark anchored by relative couplings, not a prediction of pristine-BN mobility.
+
+\begin{figure*}[t]\centering
+\includegraphics[width=0.98\textwidth]{figures/Fig3_BN_tensor_eht.png}
+\caption{\textbf{Tensorial transport in BN with a direct-EHT anchor.} (a,b) Mechanism sweeps of principal diffusion and anisotropy versus transverse rate scale; stars denote the direct-EHT point. (c) EHT intralayer and interlayer coupling scales. (d) Principal diffusivities from the direct-EHT transport ensemble. The primary result is the robust directional hierarchy rather than an absolute mobility prediction.}
+\label{fig:bn}\end{figure*}
+
+\subsection{W$_2$O$_6$: EHT independently selects an O-rich backbone}
+W$_2$O$_6$ provides the clearest demonstration of why a low-cost electronic anchor is useful. Tungsten oxides are a particularly stringent test because W--O hybridization, oxygen deficiency, and polaron formation can qualitatively reorganize the active electronic states and their transport pathways \cite{ingham2005,bondarenko2015,bousquet2020,tao2023}. The mechanism map in Fig.~\ref{fig:wo}(a,b) was generated without EHT by varying the site-energy contrast and O--O weight. At zero contrast, decreasing the O--O weight changes the first-passage time but leaves a mixed W/O path composition. Once the site contrast reaches only 0.25~eV, the W visit fraction collapses to approximately 0.05 and further increases in contrast produce little additional path selection. The map therefore identifies a saturated O-rich regime.
+
+Direct EHT is then applied independently. For the active graph, the median effective W--O coupling is 4.59~eV, whereas the median O--O rate weight relative to W--O is $3.68\times10^{-3}$, with edge-to-edge values from $3.6\times10^{-4}$ to $7.0\times10^{-3}$. The raw W $5d$--O $2p$ orbital-level difference is 4.43~eV. We emphasize that this 4.43~eV number is a screening scale rather than a quantitative carrier site-energy difference. Nevertheless, it lies far beyond the onset of saturation already established by the independent mechanism sweep.
+
+The transport result is correspondingly robust. If the EHT couplings are retained but the site contrast is artificially set to zero, the reduced first-passage time is $4.06\pm0.13$ and the W visit fraction is $0.4847\pm0.0026$. When the raw EHT orbital contrast is also used as a screening point, the values become $234.3\pm4.4$ and $0.0534\pm0.0090$, respectively, while $\Teff=1$ throughout. The O-only subgraph itself remains source--drain connected. Thus the large kinetic slowdown does not originate from graph disconnection: chemistry redirects trajectories onto an O-rich backbone.
+
+This agreement between two independently constructed descriptions is more significant than agreement in any one number. The phenomenological map establishes what site contrast and pair selectivity do; EHT places the actual geometry in the same qualitative regime without fitting the transport result. A DFT/Wannier parametrization could shift the exact coordinates of that point, but would have to cross a large region of parameter space to change the backbone-level conclusion.
+
+\begin{figure*}[t]\centering
+\includegraphics[width=0.98\textwidth]{figures/Fig4_W2O6_chemistry_eht.png}
+\caption{\textbf{Chemical-path selection in W$_2$O$_6$.} (a,b) Mechanism maps of first-passage time and W-site visitation versus site-energy contrast for several O--O weights. (c) Parameter-space location of the empirical sweep and the direct-EHT screening point. (d) Direct-EHT transport with zero site contrast versus the raw EHT orbital contrast. At the 3.4~\AA\ cutoff there are no W--W edges; the homonuclear control is therefore O--O in this geometry. The EHT orbital offset is used as a screening scale, not as a DFT-quality trap energy.}
+\label{fig:wo}\end{figure*}
+
+\subsection{A 100-molecule box connects molecular geometry to bulk tensor transport}
+A molecular structure is not determined by center-to-center distances alone. Even for chemically identical benzene molecules, rotating the molecular planes changes the projected frontier coupling by orders of magnitude. We therefore construct an explicit periodic box containing 100 benzene molecules and compute every nearest-neighbor $J_{MM}$ directly from the corresponding EHT dimer projection [Fig.~\ref{fig:molbox}]. The center lattice is identical in the two ensembles; only molecular orientation changes.
+
+In the aligned box, the EHT hole couplings span $0.0040$--$0.557$~meV. This broad directional hierarchy propagates into $(D_1,D_2,D_3)=(8.47\times10^{-10},4.62\times10^{-10},5.33\times10^{-14})$~m$^2$s$^{-1}$ for the chosen Marcus clock, corresponding to $D_1/D_3=1.59\times10^4$. The magnitude of that number is specific to the deliberately simple box geometry and must not be interpreted as a prediction for crystalline benzene.
+
+Randomizing the orientations while preserving all 100 molecular centers produces a qualitatively different result. Across ten independent orientational realizations the median pair coupling is $0.056\pm0.004$~meV. Averaging the diffusion tensors before diagonalization gives $(2.20,2.09,1.84)\times10^{-11}$~m$^2$s$^{-1}$ and
+\begin{equation}
+D_1/D_3=1.20.
+\end{equation}
+Thus the same molecular positions and graph can change from extremely anisotropic to nearly isotropic solely through EHT-resolved molecular orientation. This is the type of conclusion for which the low-cost parametrization is intended: the precise mobility is model dependent, whereas the anisotropy/isotropy crossover is a robust structural mechanism.
+
+\begin{figure*}[t]\centering
+\includegraphics[width=0.98\textwidth]{figures/Fig5_benzene_box_eht.png}
+\caption{\textbf{Direct-EHT transport in a periodic box of 100 benzene molecules.} (a,b) Identical molecular centers with aligned and isotropically distributed molecular orientations; arrows indicate representative plane normals. (c) Distribution of direct-EHT intermolecular hole couplings. (d) Principal diffusivities normalized by $D_1$. The isotropic tensor is averaged over ten independent orientational fields before diagonalization. The box is a controlled molecular benchmark, not a structural model of a specific benzene crystal phase.}
+\label{fig:molbox}\end{figure*}
+
+\subsection{From a slab CIF to molecule--substrate and molecule--molecule couplings}
+The same parametrization can be applied when molecular sites coexist with an extended substrate. Figure~\ref{fig:interface} considers graphene with benzene adsorbates. For a single molecule, direct EHT predicts a strong geometrical dependence of the interface coupling: at a fixed minimum C--C contact, the effective hole coupling decreases from 25.3~meV for a nearly parallel molecule to 2.86~meV at $75^\circ$ tilt, while the electron coupling decreases from 15.8 to 3.03~meV. The relevant input is therefore the complete adsorption geometry rather than only the adsorption height.
+
+For a four-benzene graphene structure, the automatic decomposition identifies four molecular components and returns four interface couplings of approximately 13.44~meV for the symmetric geometry shown in Fig.~\ref{fig:interface}(c). It simultaneously evaluates all six molecular-pair couplings. These range from about 0.015 to 7.06~meV, despite several pairs having comparable center separations, demonstrating that the surface problem naturally contains both $G$--$M$ and $M$--$M$ kinetic channels.
+
+This example defines the intended workflow for two-dimensional materials and slabs with adsorbates: provide a structural file, identify substrate and molecular components, compute EHT couplings on the resulting hybrid graph, and then choose the appropriate kinetic model. Organic adsorption and charge-transfer functionalization of graphene are known to modify interfacial electrostatics, scattering, and carrier density, reinforcing the need to distinguish coupling extraction from quantitative level alignment \cite{garaytapia2012}. For a localized host the graph may be propagated directly by KMC; for a delocalized conducting substrate such as pristine graphene, a reservoir or interfacial transfer description is more appropriate than forcing the substrate itself into an incoherent C--C hopping picture. Quantitative charge-transfer rates additionally require level alignment and nuclear reorganization energies, which should be supplied from DFT, constrained calculations, QM/MM, nonadiabatic dynamics, experiment, or a validated external model when needed \cite{difley2010,shuai2020,giannini2022}.
+
+\begin{figure*}[t]\centering
+\includegraphics[width=0.98\textwidth]{figures/Fig6_graphene_benzene_eht.png}
+\caption{\textbf{Hybrid molecule--graphene parametrization.} (a) Schematic top view of graphene with four benzene adsorbates. (b) Direct-EHT molecule--graphene coupling versus molecular tilt for hole and electron frontier subspaces. (c) Interface couplings for the four adsorbates in the symmetric demonstration structure. (d) The six intermolecular couplings within the same adsorbate layer. The calculation demonstrates extraction of hybrid-network couplings from geometry; quantitative charge-transfer energetics require a separately validated level alignment and reorganization energy.}
+\label{fig:interface}\end{figure*}
+
+\subsection{Accuracy hierarchy and limitations}
+The calculations support a deliberate hierarchy of claims. Exact reachability and the distinction between a missing edge and a slow edge are mathematical properties of the chosen graph. Principal tensor directions and the emergence of anisotropy are robust whenever the coupling hierarchy is correct. Chemical-backbone selection can also be robust when an independently estimated parameter lies deep inside a saturated regime, as in W$_2$O$_6$. Likewise, the collapse from a strongly ordered molecular tensor to an almost isotropic one does not require an exact absolute mobility, provided the orientation dependence of the couplings is qualitatively correct. These conclusions do not require sub-meV electronic accuracy.
+
+By contrast, absolute diffusion coefficients, mobilities, trap depths, activation energies, and carrier densities are sensitive to the microscopic energy scale. EHT cannot provide these with DFT-level reliability. The present framework also neglects explicit electron--phonon dynamics, polaronic structural relaxation except where incorporated through a rate law, many-body effects, and self-consistent electrostatics. The structures are treated as fixed unless an external structural ensemble is supplied. For interfaces and charged defects, dielectric polarization and image-charge corrections can be comparable to the energy differences that determine trapping.
+
+The intended workflow is therefore progressive. A low-cost EHT calculation can place a system on a mechanism map and identify which parameters control the result. If the conclusion is insensitive over a broad surrounding region, a qualitative or semiquantitative statement may already be justified. If the result changes sharply with a parameter, that parameter should be promoted to a higher-fidelity calculation---for example DFT, hybrid DFT, constrained DFT, Wannier-based couplings, or experiment---while the transport machinery remains unchanged. The advantage is not that EHT eliminates the need for DFT, but that it can identify where DFT is actually worth spending.
+
+\section{Conclusions}
+We have combined graph-resolved hopping transport with a low-cost semiempirical electronic parametrization layer intended for mechanism-first studies across atomic, molecular, and hybrid systems. Controlled sweeps establish how transport responds to topology, transverse coupling, chemical contrast, and local energetic structure; EHT then supplies geometry-dependent couplings without being promoted to first-principles status.
+
+The atomic benchmarks illustrate three distinct mechanisms. In the layered carbon network, EHT places the transverse rate scale near $10^{-4}$, emphasizing the separation between immediate topological rescue and slow kinetic traversal. In BN, EHT-derived couplings produce a pronounced layered tensor with $D_1/D_3\simeq13.3$. In W$_2$O$_6$, the independently parametrized O $2p$--W $5d$ network lies in the same O-rich, slow-transport regime exposed by a phenomenological chemistry map while remaining fully source--drain connected.
+
+The molecular applications make the coarse graining operational. In a periodic box containing 100 benzene molecules, direct pairwise EHT converts the molecular geometry into a 100-site hopping graph. Keeping the centers fixed while randomizing molecular orientation changes the ensemble anisotropy from $1.59\times10^4$ to 1.20, demonstrating that orientation alone can change the tensor from strongly directional to nearly isotropic. In the hybrid graphene--benzene example, the same electronic layer returns both molecule--substrate and molecule--molecule couplings from a slab-plus-adsorbate structure. This establishes a practical path from CIF geometries of molecular solids or molecule-covered two-dimensional materials to an initial transport parametrization.
+
+The central modeling principle is to separate \emph{mechanism identification} from \emph{parameter precision}. EHT is useful for screening coupling hierarchies and locating qualitative regimes at low cost. It does not remove the need for DFT or experiment when absolute level alignment, reorganization energy, polarization, charge transfer, carrier density, or quantitative mobility is required. Because the transport layer accepts edge-resolved couplings and site energies independently of their origin, higher-fidelity electronic parameters can replace the EHT estimates without changing the graph, CTMC/KMC, first-passage, or tensor machinery.
+
+\section*{Data availability}
+The structures, processed data, scripts, figure-generation workflow, and manuscript source are available in the public Hopping3D repository at \url{https://github.com/tromer-unb/hopping3d}. Current-paper reproduction is organized under \texttt{reproduction/paper/}; the development history and earlier mechanism-sweep stages remain traceable through the repository history and changelog.
+
+\section*{Acknowledgments}
+The authors acknowledge computational resources from LCCMat at the University of Bras\'ilia. Funding information will be inserted before submission.
+
+\bibliography{bibliography}
+\end{document}
