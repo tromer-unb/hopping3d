@@ -27,9 +27,9 @@ Do not tune EHT until a desired transport result is obtained. Use standard param
 
 ```bash
 hopping3d-eht doctor
-hopping3d-eht graphene examples/article_systems/carbon_stack/stacked_graphene_4layers.cif -o carbon_eht.json
-hopping3d-eht interface examples/article_systems/graphene_benzene/graphene_benzene.cif -o interface.json --report interface.md
-hopping3d-eht coverage examples/article_systems/graphene_benzene/graphene_4benzene.cif -o coverage.json --report coverage.md
+hopping3d-eht graphene examples/paper/01_carbon_stack/stacked_graphene_4layers.cif -o carbon_eht.json
+hopping3d-eht interface examples/paper/05_graphene_benzene/graphene_benzene.cif -o interface.json --report interface.md
+hopping3d-eht coverage examples/paper/05_graphene_benzene/graphene_4benzene.cif -o coverage.json --report coverage.md
 ```
 
 The parameterization output is an electronic input to the transport model. Reorganization energies and quantitatively reliable molecule-substrate level alignments must be supplied separately when the chosen rate law needs them.

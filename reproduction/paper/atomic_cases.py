@@ -19,9 +19,9 @@ BN_WALKERS=1200 if FULL else 250
 WO_TRAJ=1200 if FULL else 250
 
 def carbon_structure():
-    cif=ROOT/'reproduction/inputs/stacked_graphene_4layers.cif'
+    cif=ROOT/'examples/paper/01_carbon_stack/stacked_graphene_4layers.cif'
     if not cif.exists():
-        runpy.run_path(str(ROOT/'reproduction/inputs/build_layered_carbon.py'),run_name='__main__')
+        runpy.run_path(str(ROOT/'examples/paper/01_carbon_stack/build_layered_carbon.py'),run_name='__main__')
     return read(cif)
 
 def carbon_stack_point():
@@ -37,7 +37,7 @@ def carbon_stack_point():
             'interpretation':'topological rescue is unchanged for any positive interlayer edge; EHT fixes a low kinetic scale'}
 
 def bn_point():
-    a=read(ROOT/'examples/article_systems/bn/BN_bulk.cif').repeat((2,2,2)); p=bn_pi_eht(a); rows=[]; Ds=[]
+    a=read(ROOT/'examples/paper/02_bn_tensor/BN_bulk.cif').repeat((2,2,2)); p=bn_pi_eht(a); rows=[]; Ds=[]
     cfg={'temperature_K':300.,'rate_model':'miller_abrahams','nu0_Hz':1e13,'xi0_A':1e9,
          'edge_transfer_integrals_eV':p['edge_transfer_integrals_eV'],'J_ref_eV':p['J_ref_eV'],
          'strict_edge_transfer_integrals':True,'initial_distribution':'equilibrium'}
@@ -55,7 +55,7 @@ def bn_point():
             'mean_hops':float(np.mean([x['mean_hops'] for x in rows]))}
 
 def w2o6_point():
-    a=read(ROOT/'examples/article_systems/w2o6/W2O6.cif'); p=w2o6_atom_site_eht(a); g=build_finite_graph(a,3.4); sy=np.asarray(a.get_chemical_symbols())
+    a=read(ROOT/'examples/paper/03_w2o6_chemistry/W2O6.cif'); p=w2o6_atom_site_eht(a); g=build_finite_graph(a,3.4); sy=np.asarray(a.get_chemical_symbols())
     base={'direction':'X','temperature_K':300.,'rate_model':'miller_abrahams','nu0_Hz':1e13,'xi0_A':1e9,
           'edge_transfer_integrals_eV':p['edge_transfer_integrals_eV'],'J_ref_eV':p['J_ref_WO_eV'],
           'strict_edge_transfer_integrals':True,'n_trajectories':WO_TRAJ,'max_time_s':1e-5,'max_steps':10000,

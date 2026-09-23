@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.2.0
+
+- Reorganized the public repository around the five paper code cases.
+- Added a versioned C192 layered-carbon input and per-case `run.sh` entry points.
+- Consolidated numerical reproduction under `reproduction/paper/` with a single `reproduction/run_all.sh`.
+- Rewrote the top-level workflow documentation around structure -> EHT -> transport.
+- Kept manuscript TeX and publication figures out of the repository by design.
+- Verified the clean-install test suite and quick numerical reproduction.
+
 ## 2.1.0 — 2026-09-22
 - Synced the public transport core with the active EHT-aware engine, including explicit edge transfer integrals and Marcus rates.
 - Added `hopping3d-eht bn` and `hopping3d-eht w2o6` commands.

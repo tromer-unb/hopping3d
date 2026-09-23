@@ -1,8 +1,28 @@
 # Hopping3D
 
-Hopping3D is a compact research code for **localized-state transport on atomic, molecular, and hybrid networks**. The current release couples a direct Extended-Huckel (EHT) parametrization layer to graph analysis, continuous-time kinetic Monte Carlo (CTMC/KMC), first-passage observables, and diffusion tensors.
+Hopping3D is a research code for **localized-state transport on atomic, molecular, and hybrid networks**. The repository contains the code paths used in the accompanying paper: direct Extended-Huckel (EHT) parametrization, graph construction, CTMC/KMC transport, first-passage analysis, and diffusion tensors.
 
-The design is intentionally mechanism-first: use inexpensive EHT couplings to identify robust regimes (connectivity, anisotropy/isotropy, chemical-path selection, molecular-orientation effects, molecule-surface coupling), then replace sensitive parameters with DFT/Wannier/experiment when quantitative accuracy is required.
+**This repository intentionally contains no manuscript TeX and no publication figures.** It contains source code, example structures, tests, and scripts that reproduce the numerical datasets behind the paper cases.
+
+## What the code does
+
+```text
+CIF / XYZ / POSCAR / ASE structure
+              |
+              v
+        hopping3d-eht
+              |
+      electronic parameters
+      J_ij, screening levels
+              |
+              v
+          hopping3d
+              |
+   reachability / first passage /
+   diffusion tensor / anisotropy
+```
+
+EHT is used as a **low-cost screening parametrization**, not as a universal replacement for DFT. The intended use is to establish robust transport physics first (connectivity, anisotropy, chemical-path selection, orientation effects), then refine sensitive quantities with DFT/Wannier/experiment if needed.
 
 ## Install
 
@@ -10,120 +30,100 @@ The design is intentionally mechanism-first: use inexpensive EHT couplings to id
 git clone https://github.com/tromer-unb/hopping3d.git
 cd hopping3d
 python3 -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -e .
 ```
 
-Check the EHT runtime:
+Check the installation:
 
 ```bash
 hopping3d-eht doctor
+pytest
 ```
 
-## Two-stage workflow
+## Paper code examples
+
+All paper-related examples are under `examples/paper/`:
+
+| directory | physical problem | EHT subspace |
+|---|---|---|
+| `01_carbon_stack` | dimensional rescue in layered carbon | C 2pz |
+| `02_bn_tensor` | anisotropic 3D diffusion tensor | B/N 2pz |
+| `03_w2o6_chemistry` | chemical-path selection | O 2p + W 5d |
+| `04_benzene_box` | 100-molecule periodic box | molecular HOMO/LUMO |
+| `05_graphene_benzene` | molecule/2D-slab interface | graphene 2pz + molecular frontier states |
+
+Run any case with its local `run.sh`, for example:
+
+```bash
+bash examples/paper/02_bn_tensor/run.sh
+bash examples/paper/05_graphene_benzene/run.sh
+```
+
+## Reproduce all numerical paper datasets
+
+Quick smoke-size reproduction:
+
+```bash
+bash reproduction/run_all.sh
+```
+
+Production statistics for the heavier ensemble calculations:
+
+```bash
+FULL=1 python3 reproduction/paper/atomic_cases.py
+FULL=1 python3 reproduction/paper/benzene_box.py
+python3 reproduction/paper/graphene_benzene.py
+```
+
+Generated files are written to `reproduction/paper/results/` and are ignored by Git.
+
+## EHT first, transport second
+
+For an atomic structure the normal workflow is:
+
+```bash
+hopping3d-eht bn examples/paper/02_bn_tensor/BN_bulk.cif \
+  --repeat 2 2 2 -o bn_eht.json
+```
+
+The EHT output contains the edge-resolved couplings and the reference coupling used by the transport model. The reproduction scripts show the exact mapping from these values to Hopping3D rate parameters.
+
+When explicit EHT couplings are supplied, Hopping3D uses weights proportional to
 
 ```text
-structure (CIF/XYZ/POSCAR/...)
-        |
-        v
-  hopping3d-eht
-        |
-        +--> hole couplings / screening energies
-        +--> electron couplings / screening energies
-        |
-        v
- transport input
-        |
-        v
-    hopping3d
-        |
-        +--> reachability
-        +--> first passage / trapping / tortuosity
-        +--> diffusion tensor / principal axes
+|J_ij / J_ref|^2
 ```
 
-**One EHT electronic problem produces both occupied (hole) and unoccupied (electron) projections. Electron and hole transport are then separate single-carrier simulations.** See `docs/carriers.md`.
+and does **not** add a second empirical distance decay unless the user explicitly requests a different model.
 
-## EHT examples
+## Electrons and holes
 
-Graphene/carbon:
+The EHT electronic problem is solved once for a given geometry. Molecular occupied and unoccupied frontier subspaces are then projected from the same Hamiltonian:
 
-```bash
-hopping3d-eht graphene examples/article_systems/carbon_stack/stacked_graphene_4layers.cif -o carbon_eht.json
+```text
+one EHT Hamiltonian
+  +-- HOMO-like / occupied  -> hole J_ij
+  +-- LUMO-like / unoccupied -> electron J_ij
 ```
 
-BN:
-
-```bash
-hopping3d-eht bn examples/article_systems/bn/BN_bulk.cif --repeat 2 2 2 -o bn_eht.json
-```
-
-W2O6:
-
-```bash
-hopping3d-eht w2o6 examples/article_systems/w2o6/W2O6.cif --cutoff 3.4 -o w2o6_eht.json
-```
-
-One molecule on graphene:
-
-```bash
-hopping3d-eht interface examples/article_systems/graphene_benzene/graphene_benzene.cif \
-  -o interface.json --report interface.md
-```
-
-Several molecules on graphene:
-
-```bash
-hopping3d-eht coverage examples/article_systems/graphene_benzene/graphene_4benzene.cif \
-  -o coverage.json --report coverage.md
-```
-
-## Reproduce article numerical datasets
-
-No manuscript TeX or publication figures are stored in this repository. The numerical source datasets are reproduced with:
-
-```bash
-bash reproduction/article_cases/run_all.sh
-```
-
-Production statistics:
-
-```bash
-FULL=1 python3 reproduction/article_cases/run_atomic_cases.py
-FULL=1 python3 reproduction/article_cases/run_benzene_box.py
-python3 reproduction/article_cases/run_interface.py
-```
-
-See `docs/article_reproduction.md` for the mapping from scripts to article cases.
-
-## What is EHT used for?
-
-The same EHT engine is projected onto different physically motivated subspaces:
-
-| case | subspace |
-|---|---|
-| carbon / graphene | C 2pz |
-| BN | B/N 2pz |
-| W-O | O 2p + W 5d |
-| molecular solid | molecular HOMO/LUMO manifolds |
-| molecule on graphene | graphene 2pz + molecular frontier manifolds |
-
-EHT is a **screening parametrization**, not a universal DFT replacement. Relative coupling hierarchies are generally the intended use. Absolute quasiparticle level alignment, self-consistent charge transfer, polarization/image-charge corrections, defect energetics, and nuclear reorganization energies should be refined when they control the conclusion.
+Electron and hole transport are **separate single-carrier simulations** because they may have different couplings, driving energies, and reorganization energies. See `docs/carriers.md`.
 
 ## Documentation
 
-- `docs/workflow.md` — end-to-end workflow.
-- `docs/eht_parameterization.md` — how EHT parameters are obtained and interpreted.
-- `docs/eht_to_transport.md` — detailed structure -> EHT -> Hopping3D workflow.
-- `docs/carriers.md` — electrons vs holes.
-- `docs/parameters.md` — transport JSON parameters.
-- `docs/model.md` — graph/KMC model.
-- `docs/article_reproduction.md` — article code/data reproduction.
-- `examples/README.md` — example systems.
+- `docs/getting_started.md` — first run from clone to result.
+- `docs/eht_parameterization.md` — EHT basis, projections, outputs, and limitations.
+- `docs/eht_to_transport.md` — detailed mapping from EHT output to hopping rates.
+- `docs/carriers.md` — electron vs hole channels.
+- `docs/model.md` — graph, CTMC/KMC, first passage, and diffusion tensor.
+- `docs/parameters.md` — Hopping3D JSON fields.
+- `docs/article_reproduction.md` — mapping from paper cases to scripts.
 
-## Scope
+## Scope and limitations
 
-This code is intended for mechanism-resolved localized transport and inexpensive screening. It does not claim that pristine delocalized conductors are universally describable by incoherent hopping, and it does not infer high-accuracy electronic energetics from EHT.
+EHT is most useful here for **relative coupling hierarchies and mechanism screening**. Quantitative quasiparticle level alignment, self-consistent charge transfer, dielectric/image-charge corrections, charged-defect energetics, and nuclear reorganization energies should be supplied by a higher-fidelity method when they control the conclusion.
+
+For pristine delocalized conductors such as graphene, the repository does not claim that the substrate itself is universally described by incoherent C-C hopping. The graphene/benzene example is primarily an interface-coupling parametrization; a reservoir/interfacial-transfer description is more appropriate for quantitative charge transfer.
 
 ## License
 

@@ -27,7 +27,7 @@ The output contains a suggested graph cutoff, a reference transfer integral `J_r
 ## 3. Layered BN
 
 ```bash
-hopping3d-eht bn examples/article_systems/bn/BN_bulk.cif \
+hopping3d-eht bn examples/paper/02_bn_tensor/BN_bulk.cif \
   --repeat 2 2 2 \
   -o bn_eht.json
 ```
@@ -37,7 +37,7 @@ The EHT subspace is B/N local `2pz`. The output reports the in-plane reference c
 ## 4. W2O6
 
 ```bash
-hopping3d-eht w2o6 examples/article_systems/w2o6/W2O6.cif \
+hopping3d-eht w2o6 examples/paper/03_w2o6_chemistry/W2O6.cif \
   --cutoff 3.4 \
   -o w2o6_eht.json
 ```
@@ -61,13 +61,13 @@ The transport calculations are then separate single-carrier simulations. They ma
 The article example is generated and run with:
 
 ```bash
-python3 reproduction/article_cases/run_benzene_box.py
+python3 reproduction/paper/benzene_box.py
 ```
 
 or, with production statistics:
 
 ```bash
-FULL=1 python3 reproduction/article_cases/run_benzene_box.py
+FULL=1 python3 reproduction/paper/benzene_box.py
 ```
 
 The script constructs 100 benzene molecules, identifies 300 nearest-neighbor molecular pairs, evaluates EHT hole/electron couplings for every pair, and propagates a Marcus diffusion tensor. The Marcus reorganization energy is an external parameter (`lambda = 0.20 eV` in the controlled benchmark), not an EHT prediction.
@@ -77,14 +77,14 @@ The script constructs 100 benzene molecules, identifies 300 nearest-neighbor mol
 For one adsorbate:
 
 ```bash
-hopping3d-eht interface examples/article_systems/graphene_benzene/graphene_benzene.cif \
+hopping3d-eht interface examples/paper/05_graphene_benzene/graphene_benzene.cif \
   -o interface.json --report interface.md
 ```
 
 For several adsorbates:
 
 ```bash
-hopping3d-eht coverage examples/article_systems/graphene_benzene/graphene_4benzene.cif \
+hopping3d-eht coverage examples/paper/05_graphene_benzene/graphene_4benzene.cif \
   -o coverage.json --report coverage.md
 ```
 

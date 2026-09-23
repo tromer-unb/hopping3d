@@ -9,15 +9,15 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
 pytest -q
-bash reproduction/article_cases/run_all.sh
+bash reproduction/run_all.sh
 ```
 
 ## Production statistics
 
 ```bash
-FULL=1 python3 reproduction/article_cases/run_atomic_cases.py
-FULL=1 python3 reproduction/article_cases/run_benzene_box.py
-python3 reproduction/article_cases/run_interface.py
+FULL=1 python3 reproduction/paper/atomic_cases.py
+FULL=1 python3 reproduction/paper/benzene_box.py
+python3 reproduction/paper/graphene_benzene.py
 ```
 
-Generated files are written to `reproduction/article_cases/results/` and are ignored by Git. Random seeds and ensemble sizes are explicit in the scripts. See `docs/article_reproduction.md` for the mapping between each script and the physical case.
+Generated files are written to `reproduction/paper/results/` and are ignored by Git. Random seeds and ensemble sizes are explicit in the scripts. See `docs/article_reproduction.md` for the mapping between each script and the physical case.

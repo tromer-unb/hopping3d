@@ -8,8 +8,8 @@ from hopping3d_eht.multi_interface import parameterize_coverage_interface
 
 ROOT=Path(__file__).resolve().parents[2]
 OUT=Path(__file__).resolve().parent/'results'; OUT.mkdir(exist_ok=True)
-one=parameterize_interface(read(ROOT/'examples/article_systems/graphene_benzene/graphene_benzene.cif'))
-four=parameterize_coverage_interface(read(ROOT/'examples/article_systems/graphene_benzene/graphene_4benzene.cif'))
+one=parameterize_interface(read(ROOT/'examples/paper/05_graphene_benzene/graphene_benzene.cif'))
+four=parameterize_coverage_interface(read(ROOT/'examples/paper/05_graphene_benzene/graphene_4benzene.cif'))
 (OUT/'graphene_benzene_single.json').write_text(json.dumps(one,indent=2)+'\n')
 (OUT/'graphene_benzene_coverage.json').write_text(json.dumps(four,indent=2)+'\n')
 assert one['detection']['molecule_type']=='benzene'

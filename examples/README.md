@@ -1,16 +1,16 @@
 # Examples
 
-The repository examples correspond directly to the systems discussed in the transport framework.
+The `paper/` directory contains the five physical cases discussed in the paper. Every case has its own README and an executable `run.sh`.
 
-- `first_passage/`: finite source-to-drain KMC.
-- `diffusion_tensor/`: periodic diffusion tensor.
-- `reachability/`: graph connectivity without a kinetic time scale.
-- `article_systems/carbon_stack/`: layered carbon and dimensional rescue.
-- `article_systems/bn/`: 3D BN tensor benchmark.
-- `article_systems/w2o6/`: chemically heterogeneous W-O network.
-- `article_systems/benzene_box/`: generated 100-benzene periodic molecular benchmark.
-- `article_systems/graphene_benzene/`: one or several benzene molecules on graphene.
+```text
+paper/
+  01_carbon_stack/       dimensional rescue / weak interlayer coupling
+  02_bn_tensor/          anisotropic diffusion tensor
+  03_w2o6_chemistry/     W-O / O-O chemical-path selection
+  04_benzene_box/        periodic box of 100 benzene molecules
+  05_graphene_benzene/   molecule-on-2D-slab interface
+```
 
-The 100-benzene periodic box is generated programmatically by `reproduction/article_cases/run_benzene_box.py`, so no large pre-generated molecular box is required in the repository.
+The three small generic examples (`reachability`, `first_passage`, and `diffusion_tensor`) are kept as minimal tests of the transport engine independent of EHT.
 
-The most complete reproducibility entry point is `reproduction/article_cases/run_all.sh`.
+Generated JSON/CSV output files are not versioned. Re-run the scripts to create them locally.

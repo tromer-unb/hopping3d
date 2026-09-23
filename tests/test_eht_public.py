@@ -8,17 +8,17 @@ ROOT=Path(__file__).resolve().parents[1]
 
 def test_graphene_eht_public():
     from runpy import run_path
-    cif=ROOT/'reproduction/inputs/stacked_graphene_4layers.cif'
-    if not cif.exists(): run_path(str(ROOT/'reproduction/inputs/build_layered_carbon.py'),run_name='__main__')
+    cif=ROOT/'examples/paper/01_carbon_stack/stacked_graphene_4layers.cif'
+    if not cif.exists(): run_path(str(ROOT/'examples/paper/01_carbon_stack/build_layered_carbon.py'),run_name='__main__')
     a=read(cif); out=graphene_pi_eht(a,cutoff_A=3.75)
     assert out['Heff'].shape==(len(a),len(a))
 
 def test_bn_eht_public():
-    a=read(ROOT/'examples/article_systems/bn/BN_bulk.cif').repeat((2,2,2)); out=bn_pi_eht(a)
+    a=read(ROOT/'examples/paper/02_bn_tensor/BN_bulk.cif').repeat((2,2,2)); out=bn_pi_eht(a)
     assert out['median_interlayer_rate_scale']>0
 
 def test_w2o6_public():
-    a=read(ROOT/'examples/article_systems/w2o6/W2O6.cif'); out=w2o6_atom_site_eht(a)
+    a=read(ROOT/'examples/paper/03_w2o6_chemistry/W2O6.cif'); out=w2o6_atom_site_eht(a)
     assert out['edge_counts']['W-W']==0
 
 def test_benzene_electron_hole_channels():
