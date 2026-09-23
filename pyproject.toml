@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hopping3d"
-version = "2.0.0"
+version = "2.1.0"
 description = "Extended-Huckel parametrization and trajectory-resolved hopping transport for atomic, molecular, and hybrid networks"
 readme = "README.md"
 requires-python = ">=3.10"
