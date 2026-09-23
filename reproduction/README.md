@@ -11,9 +11,9 @@ bash reproduction/article_cases/run_all.sh
 For production statistics:
 
 ```bash
-FULL=1 python reproduction/article_cases/run_atomic_cases.py
-FULL=1 python reproduction/article_cases/run_benzene_box.py
-python reproduction/article_cases/run_interface.py
+FULL=1 python3 reproduction/article_cases/run_atomic_cases.py
+FULL=1 python3 reproduction/article_cases/run_benzene_box.py
+python3 reproduction/article_cases/run_interface.py
 ```
 
 Generated JSON/CSV/CIF outputs are written to `reproduction/article_cases/results/` and are ignored by Git.
