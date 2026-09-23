@@ -2,7 +2,7 @@
 
 Hopping3D is a research code for **localized-state transport on atomic, molecular, and hybrid networks**. The repository contains the code paths used in the accompanying paper: direct Extended-Huckel (EHT) parametrization, graph construction, CTMC/KMC transport, first-passage analysis, and diffusion tensors.
 
-**This repository intentionally contains no manuscript TeX and no publication figures.** It contains source code, example structures, tests, and scripts that reproduce the numerical datasets behind the paper cases.
+The repository contains the research code, example structures, tests, numerical reproduction scripts, and the revised manuscript package. The article source, frozen processed datasets, and reproducible figure-building workflow live under `paper/`; executable numerical workflows remain separated under `examples/paper/` and `reproduction/paper/`.
 
 ## What the code does
 
@@ -59,6 +59,25 @@ Run any case with its local `run.sh`, for example:
 bash examples/paper/02_bn_tensor/run.sh
 bash examples/paper/05_graphene_benzene/run.sh
 ```
+
+## Manuscript package
+
+The revised EHT-anchored article is versioned under `paper/`:
+
+- `paper/main.tex` and `paper/SI.tex` — article and Supplemental Material sources;
+- `paper/data/` — frozen processed datasets and example structures used by the figures;
+- `paper/figures/` — generated PNG/SVG publication figures (ignored by Git);
+- `paper/scripts/` — deterministic figure-building scripts.
+
+To rebuild figures and compile the manuscript:
+
+```bash
+cd paper
+python3 scripts/build_figures.py
+bash build.sh
+```
+
+Generated figures, LaTeX build files, and compiled PDFs are intentionally not tracked.
 
 ## Reproduce all numerical paper datasets
 
@@ -118,6 +137,7 @@ Electron and hole transport are **separate single-carrier simulations** because 
 - `docs/model.md` — graph, CTMC/KMC, first passage, and diffusion tensor.
 - `docs/parameters.md` — Hopping3D JSON fields.
 - `docs/article_reproduction.md` — mapping from paper cases to scripts.
+- `docs/calculation_lineage.md` — how the legacy, correction, extension, EHT, and revised-manuscript stages map into the curated public tree.
 
 ## Scope and limitations
 

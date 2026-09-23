@@ -1,0 +1,66 @@
+{
+  "method": "direct EHT parametrization of all three article benchmark systems",
+  "electronic_backend": "direct Extended-Huckel only",
+  "carbon_stack": {
+    "n_atoms": 192,
+    "J_intralayer_median_eV": 1.2234909620259784,
+    "J_interlayer_median_eV": 0.012435698964607656,
+    "J_ratio": 0.010164111832927139,
+    "EHT_interlayer_rate_scale": 0.00010330916935224948,
+    "article_sweep_min_eta": 0.01,
+    "article_representative_eta": 0.05,
+    "interpretation": "topological rescue is unchanged for any positive interlayer edge; EHT places the kinetic point below the plotted sweep"
+  },
+  "BN_tensor": {
+    "n_atoms": 64,
+    "J_ref_intralayer_eV": 1.5353324244947695,
+    "median_interlayer_J_eV": 0.02602218536228243,
+    "EHT_interlayer_rate_scale": 0.00028726498231725355,
+    "raw_B_minus_N_level_eV": 5.284471490386692,
+    "site_energy_use": "common site energy retained for the geometric tensor benchmark",
+    "ensemble_D_principal_m2_s": [
+      1.987091713290701e-07,
+      3.365209671167548e-08,
+      1.4936007389075377e-08
+    ],
+    "ensemble_anisotropy_D1_D3": 13.304035419426189,
+    "mean_hops": 1279.6585
+  },
+  "W2O6_chemistry": {
+    "edge_counts": {
+      "O-W": 62,
+      "O-O": 106,
+      "W-W": 0
+    },
+    "J_ref_WO_eV": 4.5902428523205066,
+    "median_OO_rate_weight": 0.00367796168107851,
+    "OO_rate_weight_range": [
+      0.0003591096902581782,
+      0.006986915186046945
+    ],
+    "raw_W5d_minus_O2p_eV": 4.4300000000000015,
+    "transport": {
+      "EHT_raw_site_contrast": {
+        "T_eff_mean": 1.0,
+        "reduced_tau_mean": 234.30135618286013,
+        "mean_hops_mean": 3.7047499999999998,
+        "mean_tortuosity_mean": 2.4138752489803714,
+        "W_visit_fraction_mean": 0.053443736874541105,
+        "reduced_tau_std": 4.364557429726606,
+        "W_visit_fraction_std": 0.008994320802388241
+      },
+      "zero_site_contrast": {
+        "T_eff_mean": 1.0,
+        "reduced_tau_mean": 4.060540524922789,
+        "mean_hops_mean": 10.0265,
+        "mean_tortuosity_mean": 4.518366565581533,
+        "W_visit_fraction_mean": 0.4847434305544218,
+        "reduced_tau_std": 0.13105692503601207,
+        "W_visit_fraction_std": 0.002555469681129351
+      }
+    },
+    "site_energy_note": "raw orbital-level contrast is a screening scale; do not equate it automatically with a defect/carrier site energy",
+    "pair_note": "no W-W edge exists at 3.4 A in the article geometry; homonuclear kinetics there are O-O only"
+  },
+  "scope": "semiempirical parameter screening for the article mechanisms; not first-principles material prediction"
+}

@@ -1,0 +1,47 @@
+{
+  "method": "100-molecule periodic benzene box; direct calibrated pi-EHT pair couplings + Marcus KMC",
+  "shape": [
+    5,
+    5,
+    4
+  ],
+  "n_molecules": 100,
+  "spacing_A": 7.0,
+  "lambda_eV": 0.2,
+  "lambda_role": "controlled external Marcus parameter, not supplied by EHT",
+  "aligned": {
+    "n_edges": 300,
+    "min_inter_molecular_atom_distance_A": 2.03528,
+    "J_hole_median_meV": 0.42598404676439616,
+    "J_hole_range_meV": [
+      0.004011203552407719,
+      0.5574076317114892
+    ],
+    "D_principal_m2_s": [
+      8.469478269544915e-10,
+      4.6182517136664474e-10,
+      5.33141788636798e-14
+    ],
+    "anisotropy_D1_D3": 15885.977145405748,
+    "mean_hops": 532.7694642857143,
+    "observation_time_s": 1e-07
+  },
+  "isotropic": {
+    "n_structural_realizations": 10,
+    "n_edges_per_realization": 300,
+    "min_inter_molecular_atom_distance_A_min": 2.0827488450244434,
+    "J_hole_median_meV_mean": 0.056203629612343306,
+    "J_hole_median_meV_std": 0.003914851297147079,
+    "first_realization_J_range_meV": [
+      0.0016383626502930048,
+      0.4690189578806849
+    ],
+    "ensemble_D_principal_m2_s": [
+      2.2018543448225826e-11,
+      2.0861279191683453e-11,
+      1.8366834860090722e-11
+    ],
+    "ensemble_anisotropy_D1_D3": 1.1988207884456945,
+    "mean_hops": 691.0918928571429
+  }
+}
