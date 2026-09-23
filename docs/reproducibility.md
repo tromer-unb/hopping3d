@@ -1,19 +1,23 @@
-# Reproducibility guide
+# Reproducibility
 
-## Minimal calculations
+This repository reproduces the **numerical datasets** used by the current Hopping3D study. It intentionally does not contain manuscript TeX or publication figures.
 
-1. `pip install -e .`
-2. `hopping3d examples/first_passage/params.json`
-3. `hopping3d examples/diffusion_tensor/params.json`
+## Quick verification
 
-## Article figures
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev]"
+pytest -q
+bash reproduction/article_cases/run_all.sh
+```
 
-- `bash reproduction/reproduce.sh quick` runs reduced-statistics simulations suitable for verification.
-- `bash reproduction/reproduce.sh full` uses the production ensemble sizes used for the reported statistics.
-- `python reproduction/scripts/plot_publication_figures.py` regenerates Figures 2--4 directly from the committed reference summaries, without rerunning long ensembles.
+## Production statistics
 
-Random seeds are explicit in every production script. Reference CSV files contain the reported ensemble summaries so numerical comparisons can be automated.
+```bash
+FULL=1 python3 reproduction/article_cases/run_atomic_cases.py
+FULL=1 python3 reproduction/article_cases/run_benzene_box.py
+python3 reproduction/article_cases/run_interface.py
+```
 
-## Manuscript source
-
-After figures are present in `reproduction/generated/`, run `make manuscript` (or `bash manuscript/build.sh`) to compile the LaTeX source. The manuscript references generated figures by relative path, so the repository contains a direct chain from CIF/parameters to data, figures, and text.
+Generated files are written to `reproduction/article_cases/results/` and are ignored by Git. Random seeds and ensemble sizes are explicit in the scripts. See `docs/article_reproduction.md` for the mapping between each script and the physical case.
