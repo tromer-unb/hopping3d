@@ -8,6 +8,7 @@ from .alignment import molecule_graphene_alignment_eht
 from .interface import parameterize_interface,render_interface_markdown
 from .trajectory import process_trajectory,save_trajectory_report
 from .multi_interface import parameterize_coverage_interface,render_coverage_markdown
+from .article_materials import bn_pi_eht,w2o6_atom_site_eht
 
 def _dump(obj,output=None):
     text=json.dumps(obj,indent=2)
@@ -43,6 +44,19 @@ def cmd_coverage(ns):
     out=parameterize_coverage_interface(read(ns.structure),patch_radius_A=ns.patch_radius,electron_offset_eV=ns.electron_offset); out['input_structure']=str(ns.structure); _dump(out,ns.output)
     if ns.report: Path(ns.report).write_text(render_coverage_markdown(out)); print(f'Wrote {ns.report}')
 
+def cmd_bn(ns):
+    atoms=read(ns.structure)
+    if ns.repeat != [1,1,1]: atoms=atoms.repeat(tuple(ns.repeat))
+    out=bn_pi_eht(atoms,cutoff_A=ns.cutoff,intralayer_cutoff_A=ns.intralayer_cutoff)
+    out["input_structure"]=str(ns.structure); out["repeat"]=ns.repeat
+    _dump(out,ns.output)
+
+def cmd_w2o6(ns):
+    atoms=read(ns.structure)
+    out=w2o6_atom_site_eht(atoms,cutoff_A=ns.cutoff,periodic=ns.periodic)
+    out["input_structure"]=str(ns.structure)
+    _dump(out,ns.output)
+
 def cmd_trajectory(ns):
     out=process_trajectory(ns.trajectory,stride=ns.stride,max_frames=ns.max_frames,patch_radius_A=ns.patch_radius,electron_offset_eV=ns.electron_offset); save_trajectory_report(out,ns.output,ns.csv); print(f'Wrote {ns.output}')
     if ns.csv: print(f'Wrote {ns.csv}')
@@ -51,6 +65,8 @@ def main(argv=None):
     ap=argparse.ArgumentParser(prog='hopping3d-eht',description='Direct Extended-Huckel parametrization for Hopping3D transport'); sub=ap.add_subparsers(dest='command',required=True)
     p=sub.add_parser('doctor',help='check the EHT runtime'); p.set_defaults(func=cmd_doctor)
     p=sub.add_parser('graphene',help='estimate graphene EHT hopping parameters from a structure'); p.add_argument('structure'); p.add_argument('-o','--output',default='hopping3d_graphene_eht.json'); p.set_defaults(func=cmd_graphene)
+    p=sub.add_parser('bn',help='parameterize a layered B/N structure with local pz EHT'); p.add_argument('structure'); p.add_argument('--repeat',type=int,nargs=3,default=[1,1,1]); p.add_argument('--cutoff',type=float,default=3.8); p.add_argument('--intralayer-cutoff',type=float,default=1.9); p.add_argument('-o','--output',default='hopping3d_bn_eht.json'); p.set_defaults(func=cmd_bn)
+    p=sub.add_parser('w2o6',help='parameterize an O/W structure with the O(2p)-W(5d) atom-site EHT reduction'); p.add_argument('structure'); p.add_argument('--cutoff',type=float,default=3.4); p.add_argument('--periodic',action='store_true'); p.add_argument('-o','--output',default='hopping3d_w2o6_eht.json'); p.set_defaults(func=cmd_w2o6)
     p=sub.add_parser('align',help='rough conjugated-molecule/graphene level alignment'); p.add_argument('graphene'); p.add_argument('--molecule'); p.add_argument('-o','--output',default='hopping3d_alignment.json'); p.set_defaults(func=cmd_align)
     p=sub.add_parser('interface',help='auto-detect and parameterize a graphene + molecular adsorbate interface'); p.add_argument('structure'); p.add_argument('--patch-radius',type=float,default=8.0); p.add_argument('-o','--output',default='hopping3d_interface.json'); p.add_argument('--report'); p.set_defaults(func=cmd_interface)
     p=sub.add_parser('coverage',help='parameterize graphene with multiple molecular adsorbates'); p.add_argument('structure'); p.add_argument('--patch-radius',type=float,default=8.0); p.add_argument('--electron-offset',type=float); p.add_argument('-o','--output',default='hopping3d_coverage.json'); p.add_argument('--report'); p.set_defaults(func=cmd_coverage)
