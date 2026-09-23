@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """First-passage diagnostics with administrative censoring and adaptive Tmax.
 
-This module is intentionally separate from the production engine. It records one row
+This module is intentionally separate from the production engine.  It records one row
 per injected trajectory, distinguishes arrival from numerical censoring, and can increase
 the observation window until the end-of-window censored fraction is small and T stabilizes.
 """
