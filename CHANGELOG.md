@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.1.0 — 2026-09-22
+- Synced the public transport core with the active EHT-aware engine, including explicit edge transfer integrals and Marcus rates.
+- Added `hopping3d-eht bn` and `hopping3d-eht w2o6` commands.
+- Added a detailed EHT-to-transport guide and paper-focused example READMEs.
+- Simplified the example tree to the active article systems plus generic reachability/first-passage/diffusion examples.
+- Made article reproduction scripts robust to environments that expose `python3` rather than `python`.
+
 ## 2.0.0 — 2026-09-22
 - Added direct Extended-Huckel parametrization as `hopping3d-eht`.
 - Added carrier-resolved molecular couplings: one EHT Hamiltonian, separate hole/electron frontier projections.
