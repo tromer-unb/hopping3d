@@ -9,7 +9,7 @@ The design is intentionally mechanism-first: use inexpensive EHT couplings to id
 ```bash
 git clone https://github.com/tromer-unb/hopping3d.git
 cd hopping3d
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -e .
 ```
@@ -52,6 +52,18 @@ Graphene/carbon:
 hopping3d-eht graphene examples/article_systems/carbon_stack/stacked_graphene_4layers.cif -o carbon_eht.json
 ```
 
+BN:
+
+```bash
+hopping3d-eht bn examples/article_systems/bn/BN_bulk.cif --repeat 2 2 2 -o bn_eht.json
+```
+
+W2O6:
+
+```bash
+hopping3d-eht w2o6 examples/article_systems/w2o6/W2O6.cif --cutoff 3.4 -o w2o6_eht.json
+```
+
 One molecule on graphene:
 
 ```bash
@@ -77,9 +89,9 @@ bash reproduction/article_cases/run_all.sh
 Production statistics:
 
 ```bash
-FULL=1 python reproduction/article_cases/run_atomic_cases.py
-FULL=1 python reproduction/article_cases/run_benzene_box.py
-python reproduction/article_cases/run_interface.py
+FULL=1 python3 reproduction/article_cases/run_atomic_cases.py
+FULL=1 python3 reproduction/article_cases/run_benzene_box.py
+python3 reproduction/article_cases/run_interface.py
 ```
 
 See `docs/article_reproduction.md` for the mapping from scripts to article cases.
@@ -102,6 +114,7 @@ EHT is a **screening parametrization**, not a universal DFT replacement. Relativ
 
 - `docs/workflow.md` — end-to-end workflow.
 - `docs/eht_parameterization.md` — how EHT parameters are obtained and interpreted.
+- `docs/eht_to_transport.md` — detailed structure -> EHT -> Hopping3D workflow.
 - `docs/carriers.md` — electrons vs holes.
 - `docs/parameters.md` — transport JSON parameters.
 - `docs/model.md` — graph/KMC model.
