@@ -22,6 +22,7 @@ chemistry parameters without changing the KMC engine.
 
 from __future__ import annotations
 
+import warnings
 import json
 import math
 from dataclasses import dataclass
@@ -417,6 +418,21 @@ def electrode_indices(u: np.ndarray, width_A: Optional[float] = None,
     if width_A is None:
         width_A = L * float(width_fraction if width_fraction is not None else 0.05)
     width = min(max(float(width_A), 1e-8), 0.45 * L)
+    electrode_fraction = 2.0 * width / L
+    
+    if electrode_fraction > 0.70:
+        warnings.warn(
+            f"Source and drain together occupy {100 * electrode_fraction:.1f}% "
+            "of the device length. Electrode regions are very large and may "
+            "strongly affect first-passage results.",
+            UserWarning,
+        )
+    elif electrode_fraction > 0.50:
+        warnings.warn(
+            f"Source and drain together occupy {100 * electrode_fraction:.1f}% "
+            "of the device length. Consider checking the electrode definition.",
+            UserWarning,
+        )
     source = np.where(u <= umin + width)[0]
     if len(source) == 0:
         source = np.asarray([int(np.argmin(u))])
